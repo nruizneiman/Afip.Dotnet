@@ -17,4 +17,9 @@
     <PackageReference Include="coverlet.collector" Version="3.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Afip.Dotnet.Abstractions\Afip.Dotnet.Abstractions.csproj" />
+    <ProjectReference Include="..\Afip.Dotnet\Afip.Dotnet.csproj" />
+  </ItemGroup>
+
 </Project>

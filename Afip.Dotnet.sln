@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Afip.Dotnet", "src\Afip.Dot
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Afip.Dotnet.UnitTests", "src\Afip.Dotnet.UnitTests\Afip.Dotnet.UnitTests.csproj", "{73F1974B-7028-4243-9420-AE1A52B3A648}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.Abstractions", "src\Afip.Dotnet.Abstractions\Afip.Dotnet.Abstractions.csproj", "{E209CD08-3341-4E6E-892D-FB8F1E2EDC63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,8 +23,15 @@ Global
 		{73F1974B-7028-4243-9420-AE1A52B3A648}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73F1974B-7028-4243-9420-AE1A52B3A648}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73F1974B-7028-4243-9420-AE1A52B3A648}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E209CD08-3341-4E6E-892D-FB8F1E2EDC63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E209CD08-3341-4E6E-892D-FB8F1E2EDC63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E209CD08-3341-4E6E-892D-FB8F1E2EDC63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E209CD08-3341-4E6E-892D-FB8F1E2EDC63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CE4C8118-5BBB-46FD-B258-37F1885E5938}
 	EndGlobalSection
 EndGlobal

@@ -4,8 +4,4 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Afip.Dotnet.Abstractions\Afip.Dotnet.Abstractions.csproj" />
-  </ItemGroup>
-
 </Project>
