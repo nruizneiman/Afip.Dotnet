@@ -2,10 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Afip.Dotnet</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>AFIP .NET SDK Contributors</Authors>
+    <Description>Open source .NET Standard SDK for integrating with AFIP (ARCA) web services including electronic invoicing, authentication, and parameter queries.</Description>
+    <PackageProjectUrl>https://github.com/afip-dotnet/afip-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/afip-dotnet/afip-dotnet</RepositoryUrl>
+    <PackageTags>afip;arca;argentina;electronic-invoicing;wsfe;wsaa</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Afip.Dotnet.Abstractions\Afip.Dotnet.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ServiceModel.Http" Version="4.10.3" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.3" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="6.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
   </ItemGroup>
 
 </Project>
