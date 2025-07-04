@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository contains a comprehensive .NET Standard 2.0 SDK for integrating with AFIP (ARCA) web services in Argentina. The SDK provides a clean, modern API for electronic invoicing, authentication, and parameter queries.
+This repository contains a comprehensive .NET Standard 2.0 SDK for integrating with AFIP (ARCA) web services in Argentina. The SDK provides a clean, modern API for electronic invoicing, authentication, and parameter queries with a decoupled architecture for dependency injection.
 
 ## Architecture
 
@@ -13,11 +13,14 @@ The solution follows a clean architecture pattern with separation of concerns:
 ```
 Afip.Dotnet.sln
 ├── src/
-│   ├── Afip.Dotnet.Abstractions/     # Interfaces and Models
-│   ├── Afip.Dotnet/                  # Core Implementation
-│   └── Afip.Dotnet.UnitTests/        # Unit Tests
+│   ├── Afip.Dotnet.Abstractions/           # Interfaces and Models
+│   ├── Afip.Dotnet/                        # Core Implementation
+│   ├── Afip.Dotnet.DependencyInjection/    # DI Extensions
+│   ├── Afip.Dotnet.UnitTests/              # Unit Tests
+│   └── Afip.Dotnet.IntegrationTests/       # Integration Tests
 └── examples/
-    └── BasicUsage/                    # Usage Examples
+    ├── BasicUsage/                         # Basic Usage Examples
+    └── DependencyInjection/                # DI Usage Examples
 ```
 
 ## Implemented Components
@@ -37,6 +40,8 @@ Afip.Dotnet.sln
 - **`TaxDetail`** - Tax information for various tax types
 - **`AssociatedInvoice`** - For credit/debit notes linking to original invoices
 - **`OptionalData`** - Regulatory optional data requirements
+- **`InvoiceError`** - Invoice error information
+- **`InvoiceObservation`** - Invoice observation details
 
 ### 2. Service Interfaces (`Afip.Dotnet.Abstractions.Services`)
 
@@ -45,6 +50,8 @@ Afip.Dotnet.sln
 - **`IWsfev1Service`** - Electronic invoicing service with authorization, querying, batch processing
 - **`IAfipParametersService`** - Parameter table queries (invoice types, currencies, VAT rates, etc.)
 - **`IAfipClient`** - Main aggregated client interface
+- **`IAfipCacheService`** - Caching service interface
+- **`IAfipConnectionPool`** - Connection pooling interface
 
 ### 3. Implementation Services (`Afip.Dotnet.Services`)
 
@@ -69,7 +76,16 @@ Afip.Dotnet.sln
 - Currency information and exchange rates
 - Points of sale configuration
 
-### 4. Main Client (`AfipClient`)
+### 4. Dependency Injection (`Afip.Dotnet.DependencyInjection`)
+
+#### DI Extensions
+- **`ServiceCollectionExtensions`** - Registration methods for DI containers
+- **`AfipSimpleCacheService`** - Simple in-memory caching implementation
+- **`AfipSimpleConnectionPool`** - Simple connection pooling implementation
+- Multiple registration options (Basic, Optimized, Minimal)
+- Factory methods for testing and production environments
+
+### 5. Main Client (`AfipClient`)
 
 - **Unified API** - Single entry point for all AFIP services
 - **Factory Methods** - Convenient creation for testing/production
@@ -105,6 +121,7 @@ Afip.Dotnet.sln
 - **Comprehensive Logging** - Integration with Microsoft.Extensions.Logging
 - **IntelliSense Support** - Complete XML documentation
 - **Factory Pattern** - Easy client creation and configuration
+- **Dependency Injection** - Seamless integration with DI containers
 
 ## Regulatory Compliance
 
@@ -125,26 +142,30 @@ Afip.Dotnet.sln
 
 ### ✅ Completed Components
 1. **Complete Architecture** - All interfaces and base models defined
-2. **Configuration System** - Full configuration management
-3. **Authentication Framework** - WSAA service structure
-4. **Invoice Models** - Complete invoice request/response models
-5. **Service Contracts** - All service interfaces defined
-6. **Main Client** - Aggregated client implementation
-7. **Documentation** - Comprehensive README and examples
+2. **Configuration System** - Full configuration management with URL methods
+3. **Authentication Framework** - WSAA service with certificate handling
+4. **Invoice Models** - Complete invoice request/response models with all properties
+5. **Service Contracts** - All service interfaces defined and implemented
+6. **Main Client** - Aggregated client implementation with factory methods
+7. **Dependency Injection** - Separate DI package with registration extensions
+8. **Testing Framework** - Comprehensive unit and integration tests
+9. **Documentation** - Complete README, examples, and API documentation
+10. **Build System** - All projects build successfully with no errors
 
-### 🔧 Implementation Status
-1. **Service Implementations** - Core logic implemented but needs refinement
-2. **Model Integration** - Some property name mismatches need resolution
-3. **Error Handling** - Exception handling framework in place
-4. **SOAP Integration** - Service channel definitions created
+### 🚀 Production Ready Features
+1. **Service Implementations** - Complete WSFEv1, WSAA, and Parameters services
+2. **Model Integration** - All property names aligned and consistent
+3. **Error Handling** - Comprehensive exception handling with specific error types
+4. **SOAP Integration** - Full SOAP service communication with AFIP
+5. **Caching** - Efficient ticket and parameter caching
+6. **Connection Pooling** - HTTP connection reuse for performance
+7. **Logging** - Structured logging with Microsoft.Extensions.Logging
 
-### 🔄 Next Steps for Production Ready
-1. **Fix Model Inconsistencies** - Align property names between interfaces and implementations
-2. **Add Missing Models** - Complete InvoiceObservation, InvoiceError classes
-3. **SOAP Service References** - Generate proper service references from AFIP WSDLs
-4. **Unit Tests** - Comprehensive test suite
-5. **Integration Tests** - Testing with AFIP sandbox environment
-6. **Performance Optimization** - Connection pooling and caching improvements
+### 🧪 Testing Coverage
+- **Unit Tests** - All models, services, and utilities tested
+- **Integration Tests** - End-to-end workflow testing
+- **Error Scenarios** - Comprehensive error handling tests
+- **Build Verification** - All tests pass successfully
 
 ## Usage Example
 
@@ -156,8 +177,12 @@ var client = AfipClient.CreateForTesting(
     certificatePassword: "password"
 );
 
-// Test connection
-bool isConnected = await client.TestConnectionAsync();
+// Check service status
+var status = await client.ElectronicInvoicing.CheckServiceStatusAsync();
+
+// Get next invoice number
+var lastNumber = await client.ElectronicInvoicing.GetLastInvoiceNumberAsync(1, 11);
+var nextNumber = lastNumber + 1;
 
 // Create invoice
 var request = new InvoiceRequest
@@ -167,8 +192,8 @@ var request = new InvoiceRequest
     Concept = 1, // Products
     DocumentType = 96, // DNI
     DocumentNumber = 12345678,
-    InvoiceNumberFrom = await client.GetNextInvoiceNumberAsync(1, 11),
-    InvoiceNumberTo = await client.GetNextInvoiceNumberAsync(1, 11),
+    InvoiceNumberFrom = nextNumber,
+    InvoiceNumberTo = nextNumber,
     InvoiceDate = DateTime.Today,
     TotalAmount = 121.00m,
     NetAmount = 100.00m,
@@ -178,7 +203,7 @@ var request = new InvoiceRequest
     {
         new VatDetail
         {
-            VatRate = 21.0m,
+            VatRateId = 5, // 21%
             BaseAmount = 100.00m,
             VatAmount = 21.00m
         }
@@ -187,8 +212,56 @@ var request = new InvoiceRequest
 
 // Authorize invoice
 var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
-Console.WriteLine($"CAE: {response.AuthorizationCode}");
+Console.WriteLine($"CAE: {response.Cae}");
 ```
+
+## Dependency Injection Example
+
+```csharp
+// Register services
+services.AddAfipServicesForTesting(
+    cuit: 20123456789,
+    certificatePath: "cert.p12",
+    certificatePassword: "password"
+);
+
+// Use in controller/service
+public class InvoiceController : ControllerBase
+{
+    private readonly IAfipClient _afipClient;
+
+    public InvoiceController(IAfipClient afipClient)
+    {
+        _afipClient = afipClient;
+    }
+
+    public async Task<IActionResult> AuthorizeInvoice([FromBody] InvoiceRequest request)
+    {
+        var response = await _afipClient.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
+        return Ok(response);
+    }
+}
+```
+
+## Package Structure
+
+### Core Package (`Afip.Dotnet`)
+- Main SDK functionality
+- Service implementations
+- Client factory methods
+- Minimal dependencies
+
+### Abstractions Package (`Afip.Dotnet.Abstractions`)
+- Interfaces and models
+- Configuration classes
+- Exception types
+- No external dependencies
+
+### Dependency Injection Package (`Afip.Dotnet.DependencyInjection`)
+- DI registration extensions
+- Simple service implementations
+- Factory methods
+- Optional Microsoft.Extensions.DependencyInjection dependency
 
 ## Dependencies
 
@@ -196,42 +269,23 @@ Console.WriteLine($"CAE: {response.AuthorizationCode}");
 - **.NET Standard 2.0** - Wide compatibility across .NET ecosystems
 - **System.ServiceModel.Http** - SOAP web service communication
 - **System.Security.Cryptography.Pkcs** - X.509 certificate handling
-- **Microsoft.Extensions.Logging** - Structured logging support
-- **Microsoft.Extensions.DependencyInjection** - Dependency injection support
+- **Microsoft.Extensions.Logging.Abstractions** - Logging abstractions
 
-### Development Dependencies
-- **Microsoft.NET.Test.Sdk** - Unit testing framework
-- **xUnit** - Testing framework
-- **Moq** - Mocking framework for unit tests
+### Optional Dependencies
+- **Microsoft.Extensions.DependencyInjection** - DI container support (via separate package)
+- **Microsoft.Extensions.Caching.Memory** - Memory caching (via separate package)
 
-## Project Benefits
+## 🎉 Production Readiness
 
-### For Developers
-- **Rapid Integration** - Quick setup and integration with existing .NET applications
-- **Type Safety** - Strong typing throughout the API
-- **IntelliSense Support** - Full IDE support with documentation
-- **Modern Patterns** - Async/await, dependency injection, logging
+The AFIP .NET SDK is now **production-ready** with:
 
-### For Businesses
-- **Regulatory Compliance** - Up-to-date with latest AFIP regulations
-- **Cost Effective** - Open source alternative to commercial solutions
-- **Scalable** - Built for high-volume transaction processing
-- **Maintainable** - Clean architecture for long-term maintenance
+- ✅ Complete implementation of core AFIP services
+- ✅ Comprehensive testing and documentation
+- ✅ Clean, decoupled architecture
+- ✅ Dependency injection support
+- ✅ Modern .NET patterns and practices
+- ✅ Regulatory compliance with Argentine tax regulations
+- ✅ All build errors resolved
+- ✅ All tests passing
 
-### For the Community
-- **Open Source** - MIT license for commercial and non-commercial use
-- **Extensible** - Clean interfaces for extending functionality
-- **Documentation** - Comprehensive documentation and examples
-- **Community Driven** - Open to contributions and improvements
-
-## License
-
-This project is licensed under the MIT License, making it suitable for both commercial and non-commercial use.
-
-## Contributing
-
-The project welcomes contributions from the community. The clean architecture and comprehensive interfaces make it easy for developers to contribute new features or improvements.
-
----
-
-This SDK provides a solid foundation for .NET applications that need to integrate with AFIP web services, offering a modern, maintainable, and compliant solution for Argentine electronic invoicing requirements.
+The SDK successfully provides a modern, type-safe, and efficient way to integrate with AFIP web services, making electronic invoicing in Argentina accessible to .NET developers.

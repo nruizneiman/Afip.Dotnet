@@ -19,6 +19,7 @@ A comprehensive and modern .NET SDK for integrating with AFIP (now ARCA - Agenci
 - **📝 Comprehensive Logging**: Built-in logging support with Microsoft.Extensions.Logging
 - **🧪 Testing Support**: Separate testing and production environments
 - **📦 NuGet Packages**: Easy installation via NuGet
+- **🔧 Dependency Injection**: Separate DI package for clean architecture
 
 ### Supported AFIP Services
 
@@ -49,22 +50,23 @@ This SDK implements and supports the following AFIP regulations:
 
 ## 📦 Installation
 
-### NuGet Package Manager
-
-```bash
-Install-Package Afip.Dotnet
-```
-
-### .NET CLI
+### Core Package
 
 ```bash
 dotnet add package Afip.Dotnet
+```
+
+### Dependency Injection Package (Optional)
+
+```bash
+dotnet add package Afip.Dotnet.DependencyInjection
 ```
 
 ### PackageReference
 
 ```xml
 <PackageReference Include="Afip.Dotnet" Version="1.0.0" />
+<PackageReference Include="Afip.Dotnet.DependencyInjection" Version="1.0.0" />
 ```
 
 ## ⚙️ Configuration
@@ -128,19 +130,19 @@ using var productionClient = AfipClient.CreateForProduction(
 
 ```csharp
 // Check if the service is available
-var status = await client.ElectronicInvoicing.GetServiceStatusAsync();
-Console.WriteLine($"Service Status: {status.Application} - {status.Database} - {status.Authentication}");
+var status = await client.ElectronicInvoicing.CheckServiceStatusAsync();
+Console.WriteLine($"Service Status: {status.AppServer} - {status.DbServer} - {status.AuthServer}");
 ```
 
 ### Get Next Invoice Number
 
 ```csharp
 // Get the next available invoice number
-var nextNumber = await client.ElectronicInvoicing.GetLastInvoiceNumberAsync(
+var lastNumber = await client.ElectronicInvoicing.GetLastInvoiceNumberAsync(
     pointOfSale: 1,
     invoiceType: 11 // Invoice C
 );
-Console.WriteLine($"Next invoice number: {nextNumber + 1}");
+Console.WriteLine($"Next invoice number: {lastNumber + 1}");
 ```
 
 ### Authorize a Simple Invoice
@@ -222,7 +224,7 @@ var creditNote = new InvoiceRequest
         {
             InvoiceType = 11,
             PointOfSale = 1,
-            InvoiceNumber = 123
+            InvoiceNumber = 123L
         }
     },
     
@@ -243,7 +245,7 @@ var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(creditNote
 ### Query Existing Invoice
 
 ```csharp
-var invoice = await client.ElectronicInvoicing.GetInvoiceAsync(
+var invoice = await client.ElectronicInvoicing.QueryInvoiceAsync(
     pointOfSale: 1,
     invoiceType: 11,
     invoiceNumber: 123
@@ -251,7 +253,7 @@ var invoice = await client.ElectronicInvoicing.GetInvoiceAsync(
 
 Console.WriteLine($"Invoice Amount: {invoice.TotalAmount}");
 Console.WriteLine($"CAE: {invoice.Cae}");
-Console.WriteLine($"Authorized: {invoice.AuthorizationDate}");
+Console.WriteLine($"Authorized: {invoice.ProcessedDate}");
 ```
 
 ### Batch Invoice Processing
@@ -306,7 +308,7 @@ foreach (var rate in vatRates)
 
 // Get document types
 var documentTypes = await client.Parameters.GetDocumentTypesAsync();
-var cuit = documentTypes.FirstOrDefault(d => d.Id == 80);
+var cuit = documentTypes.FirstOrDefault(d => d.Id == "80");
 Console.WriteLine($"CUIT: {cuit?.Description}");
 ```
 
@@ -319,8 +321,8 @@ The SDK automatically handles WSAA authentication:
 var ticket = await client.Authentication.GetValidTicketAsync("wsfe");
 Console.WriteLine($"Token expires at: {ticket.ExpiresAt}");
 
-// Force ticket renewal
-await client.Authentication.RefreshTicketAsync("wsfe");
+// Clear ticket cache
+client.Authentication.ClearTicketCache();
 
 // Check ticket status
 var isValid = ticket.IsValid;
@@ -466,22 +468,22 @@ var config = new AfipConfiguration
 - `System.Security.Cryptography.Pkcs` (>= 6.0.0)
 - `Microsoft.Extensions.Logging.Abstractions` (>= 6.0.0)
 
-## � Dependency Injection
+## 🔧 Dependency Injection
 
-The AFIP SDK provides seamless integration with Microsoft.Extensions.DependencyInjection, making it easy to use in ASP.NET Core, Worker Services, and other .NET applications.
+The AFIP SDK provides seamless integration with Microsoft.Extensions.DependencyInjection through a separate package, making it easy to use in ASP.NET Core, Worker Services, and other .NET applications.
 
 ### Installation
 
-First, install the AFIP SDK package:
+First, install the AFIP SDK DI package:
 
 ```bash
-dotnet add package Afip.Dotnet
+dotnet add package Afip.Dotnet.DependencyInjection
 ```
 
 ### Basic Registration
 
 ```csharp
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 using Afip.Dotnet.Abstractions.Models;
 
 // Register AFIP services with configuration
@@ -528,13 +530,35 @@ services.AddAfipServicesForProduction(
 );
 ```
 
+### Optimized Registration
+
+```csharp
+// Register with all optimizations enabled
+services.AddAfipServicesOptimized(new AfipConfiguration
+{
+    Environment = AfipEnvironment.Production,
+    Cuit = 20123456789,
+    CertificatePath = "cert.p12",
+    CertificatePassword = "password"
+});
+
+// Register with minimal dependencies
+services.AddAfipServicesMinimal(new AfipConfiguration
+{
+    Environment = AfipEnvironment.Testing,
+    Cuit = 20123456789,
+    CertificatePath = "test-cert.p12",
+    CertificatePassword = "test-password"
+});
+```
+
 ## 📱 Usage Examples with Dependency Injection
 
 ### ASP.NET Core Web API
 
 ```csharp
 // Program.cs (.NET 6+)
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -616,7 +640,7 @@ public class InvoiceController : ControllerBase
     {
         try
         {
-            var status = await _afipClient.ElectronicInvoicing.GetServiceStatusAsync();
+            var status = await _afipClient.ElectronicInvoicing.CheckServiceStatusAsync();
             return Ok(status);
         }
         catch (Exception ex)
@@ -632,7 +656,7 @@ public class InvoiceController : ControllerBase
 
 ```csharp
 // Program.cs
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -720,7 +744,7 @@ public class InvoiceProcessorWorker : BackgroundService
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.Abstractions.Models.Invoice;
 
@@ -759,8 +783,8 @@ public class InvoiceProcessor
         try
         {
             // Check service status
-            var status = await _afipClient.ElectronicInvoicing.GetServiceStatusAsync();
-            _logger.LogInformation("AFIP Service Status: {Status}", status.Application);
+            var status = await _afipClient.ElectronicInvoicing.CheckServiceStatusAsync();
+            _logger.LogInformation("AFIP Service Status: {Status}", status.AppServer);
 
             // Get next invoice number
             var lastNumber = await _afipClient.ElectronicInvoicing
@@ -893,7 +917,7 @@ public class MultiCompanyInvoiceController : ControllerBase
 }
 ```
 
-## �🤝 Contributing
+## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
@@ -962,6 +986,9 @@ A: The SDK will throw an `AfipException` when the certificate expires. You'll ne
 
 **Q: Is this SDK thread-safe?**
 A: Yes, the SDK is designed to be thread-safe and can be used in multi-threaded applications.
+
+**Q: What's the difference between the core package and the DI package?**
+A: The core package (`Afip.Dotnet`) contains the main SDK functionality. The DI package (`Afip.Dotnet.DependencyInjection`) provides dependency injection extensions for easier integration with ASP.NET Core and other DI containers.
 
 ## 📞 Support
 
