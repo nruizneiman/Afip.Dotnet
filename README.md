@@ -1,9 +1,9 @@
 # AFIP .NET SDK
 
-[![Build Status](https://github.com/your-username/afip-dotnet/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/your-username/afip-dotnet/actions)
+[![Build Status](https://github.com/nruizneiman/Afip.Dotnet/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/nruizneiman/Afip.Dotnet/actions)
 [![NuGet Version](https://img.shields.io/nuget/v/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
-[![Coverage Status](https://codecov.io/gh/your-username/afip-dotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/afip-dotnet)
+[![Coverage Status](https://codecov.io/gh/nruizneiman/Afip.Dotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/nruizneiman/Afip.Dotnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive and modern .NET SDK for integrating with AFIP (now ARCA - Agencia de Recaudación y Control Aduanero) web services. This SDK provides a clean, async/await-based API for electronic invoicing, authentication, and parameter management.
@@ -992,9 +992,9 @@ A: The core package (`Afip.Dotnet`) contains the main SDK functionality. The DI 
 
 ## 📞 Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/your-username/afip-dotnet/issues)
-- **Discussions**: [Ask questions and share ideas](https://github.com/your-username/afip-dotnet/discussions)
-- **Documentation**: [Comprehensive guides and API reference](https://your-username.github.io/afip-dotnet/)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/nruizneiman/Afip.Dotnet/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/nruizneiman/Afip.Dotnet/discussions)
+- **Documentation**: [Comprehensive guides and API reference](https://nruizneiman.github.io/Afip.Dotnet/)
 
 ---
 
