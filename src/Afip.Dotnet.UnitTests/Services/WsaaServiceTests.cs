@@ -63,24 +63,24 @@ namespace Afip.Dotnet.UnitTests.Services
         }
 
         [Fact]
-        public async Task GetValidTicketAsync_WithNullService_ShouldThrowArgumentException()
+        public async Task GetValidTicketAsync_WithNullService_ShouldThrowArgumentNullException()
         {
             // Arrange
             var service = new WsaaService(_testConfiguration, _mockLogger.Object);
 
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
+            await Assert.ThrowsAsync<ArgumentNullException>(() => 
                 service.GetValidTicketAsync(null!, CancellationToken.None));
         }
 
         [Fact]
-        public async Task GetValidTicketAsync_WithEmptyService_ShouldThrowArgumentException()
+        public async Task GetValidTicketAsync_WithEmptyService_ShouldThrowAfipException()
         {
             // Arrange
             var service = new WsaaService(_testConfiguration, _mockLogger.Object);
 
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
+            await Assert.ThrowsAsync<AfipException>(() => 
                 service.GetValidTicketAsync("", CancellationToken.None));
         }
 
