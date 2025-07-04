@@ -9,11 +9,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.Abstractions", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.UnitTests", "src\Afip.Dotnet.UnitTests\Afip.Dotnet.UnitTests.csproj", "{3C4D5E6F-7890-ABCD-EF12-34567890ABCD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.IntegrationTests", "src\Afip.Dotnet.IntegrationTests\Afip.Dotnet.IntegrationTests.csproj", "{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicUsage", "examples\BasicUsage\BasicUsage.csproj", "{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection", "examples\DependencyInjection\DependencyInjection.csproj", "{6F789012-3456-789A-BCDE-F123456789AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicUsage", "examples\BasicUsage\BasicUsage.csproj", "{6F789012-3456-789A-BCDE-F123456789AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection", "examples\DependencyInjection\DependencyInjection.csproj", "{789ABCDE-F123-4567-89AB-CDEF12345678}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,18 +35,22 @@ Global
 		{3C4D5E6F-7890-ABCD-EF12-34567890ABCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C4D5E6F-7890-ABCD-EF12-34567890ABCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C4D5E6F-7890-ABCD-EF12-34567890ABCD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{789ABCDE-F123-4567-89AB-CDEF12345678}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{789ABCDE-F123-4567-89AB-CDEF12345678}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{789ABCDE-F123-4567-89AB-CDEF12345678}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{789ABCDE-F123-4567-89AB-CDEF12345678}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5E6F7890-ABCD-EF12-3456-7890ABCDEF12} = {4D5E6F78-90AB-CDEF-1234-567890ABCDEF}
-		{6F789012-3456-789A-BCDE-F123456789AB} = {4D5E6F78-90AB-CDEF-1234-567890ABCDEF}
+		{6F789012-3456-789A-BCDE-F123456789AB} = {5E6F7890-ABCD-EF12-3456-7890ABCDEF12}
+		{789ABCDE-F123-4567-89AB-CDEF12345678} = {5E6F7890-ABCD-EF12-3456-7890ABCDEF12}
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
