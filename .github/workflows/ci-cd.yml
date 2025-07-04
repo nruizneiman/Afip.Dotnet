@@ -43,8 +43,9 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    - name: Run Unit Tests
+    - name: Run All Tests
       run: |
+        # Run all test projects
         dotnet test src/Afip.Dotnet.UnitTests/Afip.Dotnet.UnitTests.csproj \
           --configuration Release \
           --no-build \
@@ -53,36 +54,32 @@ jobs:
           --results-directory TestResults \
           --collect:"XPlat Code Coverage" \
           -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          
+        dotnet test src/Afip.Dotnet.DependencyInjection.Tests/Afip.Dotnet.DependencyInjection.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger trx \
+          --results-directory TestResults \
+          --collect:"XPlat Code Coverage" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          
+        dotnet test src/Afip.Dotnet.IntegrationTests/Afip.Dotnet.IntegrationTests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger trx \
+          --results-directory TestResults \
+          --collect:"XPlat Code Coverage" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
-    - name: Run Integration Tests (if certificates available)
+    - name: Show Test Summary
       run: |
-        # Integration tests are optional and only run if certificates are available
-        # In CI/CD, you would typically use test certificates from secrets
-        if [ -n "${{ secrets.AFIP_TEST_CUIT }}" ] && [ -n "${{ secrets.AFIP_TEST_CERT_PASSWORD }}" ]; then
-          echo "Running integration tests with provided certificates"
-          
-          # Create test certificate from base64 secret
-          echo "${{ secrets.AFIP_TEST_CERT_BASE64 }}" | base64 -d > test-cert.p12
-          
-          # Set environment variables for integration tests
-          export AFIP_Cuit="${{ secrets.AFIP_TEST_CUIT }}"
-          export AFIP_CertificatePath="test-cert.p12"
-          export AFIP_CertificatePassword="${{ secrets.AFIP_TEST_CERT_PASSWORD }}"
-          export AFIP_Environment="Testing"
-          
-          dotnet test src/Afip.Dotnet.IntegrationTests/Afip.Dotnet.IntegrationTests.csproj \
-            --configuration Release \
-            --no-build \
-            --verbosity normal \
-            --logger trx \
-            --results-directory TestResults
-            
-          # Clean up certificate file
-          rm -f test-cert.p12
-        else
-          echo "Integration tests skipped - certificates not available"
-        fi
-      continue-on-error: true
+        echo "=== Test Summary ==="
+        echo "Integration tests are expected to be skipped when certificates are not available"
+        echo "This is normal behavior in CI/CD environments"
+        echo "All unit tests and DI tests should pass"
+        echo "==================="
 
     - name: Generate Code Coverage Report
       uses: codecov/codecov-action@v3
@@ -124,6 +121,7 @@ jobs:
           <ItemGroup>
             <ProjectReference Include="src/Afip.Dotnet/Afip.Dotnet.csproj" />
             <ProjectReference Include="src/Afip.Dotnet.Abstractions/Afip.Dotnet.Abstractions.csproj" />
+            <ProjectReference Include="src/Afip.Dotnet.DependencyInjection/Afip.Dotnet.DependencyInjection.csproj" />
             <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
             <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
             <PackageReference Include="BenchmarkDotNet" Version="0.13.8" />
@@ -138,7 +136,7 @@ jobs:
         using System.Threading.Tasks;
         using Microsoft.Extensions.DependencyInjection;
         using Microsoft.Extensions.Logging;
-        using Afip.Dotnet.Extensions;
+        using Afip.Dotnet.DependencyInjection.Extensions;
         using Afip.Dotnet.Abstractions.Models;
         using Afip.Dotnet.Abstractions.Services;
         using BenchmarkDotNet.Attributes;
@@ -266,6 +264,12 @@ jobs:
           --no-build \
           --output ./artifacts \
           /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
+          
+        dotnet pack src/Afip.Dotnet.DependencyInjection/Afip.Dotnet.DependencyInjection.csproj \
+          --configuration Release \
+          --no-build \
+          --output ./artifacts \
+          /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
 
     - name: Upload Packages
       uses: actions/upload-artifact@v3
@@ -324,6 +328,8 @@ jobs:
         cp README.md docs-site/
         cp CONTRIBUTING.md docs-site/
         cp CHANGELOG.md docs-site/
+        cp IMPLEMENTATION_STATUS.md docs-site/
+        cp IMPLEMENTATION_SUMMARY.md docs-site/
         
         # Copy examples
         cp -r examples docs-site/

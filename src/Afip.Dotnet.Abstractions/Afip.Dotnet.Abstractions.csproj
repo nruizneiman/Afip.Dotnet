@@ -4,6 +4,15 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Afip.Dotnet.Abstractions</PackageId>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>AFIP .NET SDK Contributors</Authors>
+    <Description>Abstractions and interfaces for AFIP .NET SDK</Description>
+    <PackageProjectUrl>https://github.com/afip-dotnet/afip-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/afip-dotnet/afip-dotnet</RepositoryUrl>
+    <PackageTags>afip;arca;argentina;abstractions;interfaces</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
 </Project>
