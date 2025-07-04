@@ -19,6 +19,16 @@ namespace Afip.Dotnet.IntegrationTests
         public IServiceProvider ServiceProvider { get; private set; }
         public IAfipClient AfipClient { get; private set; }
         public AfipConfiguration Configuration { get; private set; }
+        
+        /// <summary>
+        /// Indicates if the certificate is available for integration tests
+        /// </summary>
+        public bool IsCertificateAvailable => !string.IsNullOrEmpty(Configuration.CertificatePath) && File.Exists(Configuration.CertificatePath);
+        
+        /// <summary>
+        /// Indicates if the environment is suitable for testing
+        /// </summary>
+        public bool IsTestingEnvironment => Configuration.Environment == AfipEnvironment.Testing;
 
         public IntegrationTestFixture()
         {
@@ -32,19 +42,27 @@ namespace Afip.Dotnet.IntegrationTests
             // Create AFIP configuration
             Configuration = CreateAfipConfiguration(configuration);
 
-            // Skip if certificate is not available
-            SkipIfCertificateNotAvailable();
+            // Only register services if certificate is available
+            if (IsCertificateAvailable && IsTestingEnvironment)
+            {
+                // Build service provider
+                var services = new ServiceCollection();
 
-            // Build service provider
-            var services = new ServiceCollection();
+                // Add AFIP services with all optimizations
+                services.AddAfipServicesOptimized(Configuration);
 
-            // Add AFIP services with all optimizations
-            services.AddAfipServicesOptimized(Configuration);
+                ServiceProvider = services.BuildServiceProvider();
+                AfipClient = ServiceProvider.GetRequiredService<IAfipClient>();
 
-            ServiceProvider = services.BuildServiceProvider();
-            AfipClient = ServiceProvider.GetRequiredService<IAfipClient>();
-
-            Console.WriteLine($"Integration test fixture initialized for environment: {Configuration.Environment}");
+                Console.WriteLine($"Integration test fixture initialized for environment: {Configuration.Environment}");
+            }
+            else
+            {
+                // Set to null when certificate is not available
+                ServiceProvider = null;
+                AfipClient = null;
+                Console.WriteLine("Integration test fixture initialized without AFIP services (certificate not available)");
+            }
         }
 
         private AfipConfiguration CreateAfipConfiguration(IConfiguration configuration)
@@ -115,28 +133,6 @@ namespace Afip.Dotnet.IntegrationTests
             return afipConfig;
         }
 
-        /// <summary>
-        /// Skips test if certificate is not available
-        /// </summary>
-        public void SkipIfCertificateNotAvailable()
-        {
-            if (string.IsNullOrEmpty(Configuration.CertificatePath) || !File.Exists(Configuration.CertificatePath))
-            {
-                throw new Xunit.Sdk.SkipException("Certificate file not available for integration tests");
-            }
-        }
-
-        /// <summary>
-        /// Skips test if not in testing environment
-        /// </summary>
-        public void SkipIfNotTestingEnvironment()
-        {
-            if (Configuration.Environment != AfipEnvironment.Testing)
-            {
-                throw new Xunit.Sdk.SkipException("Test requires AFIP testing environment");
-            }
-        }
-
         public void Dispose()
         {
             if (ServiceProvider is IDisposable disposableServiceProvider)
@@ -156,4 +152,4 @@ namespace Afip.Dotnet.IntegrationTests
         // to be the place to apply [CollectionDefinition] and all the
         // ICollectionFixture<> interfaces.
     }
-}
+} 

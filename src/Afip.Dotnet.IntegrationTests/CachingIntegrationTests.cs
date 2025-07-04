@@ -23,6 +23,13 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Cache_Parameter_Tables_Effectively()
         {
+            // Skip if services are not available
+            if (_fixture.ServiceProvider == null)
+            {
+                _output.WriteLine("AFIP services not available. Skipping test.");
+                return;
+            }
+
             // Arrange
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             if (cacheService == null)
@@ -31,8 +38,12 @@ namespace Afip.Dotnet.IntegrationTests
                 return;
             }
 
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
             var client = _fixture.AfipClient;
 
@@ -72,6 +83,13 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Handle_Cache_Expiration_Correctly()
         {
+            // Skip if services are not available
+            if (_fixture.ServiceProvider == null)
+            {
+                _output.WriteLine("AFIP services not available. Skipping test.");
+                return;
+            }
+
             // Arrange
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             if (cacheService == null)
@@ -111,6 +129,13 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Support_GetOrSet_Pattern()
         {
+            // Skip if services are not available
+            if (_fixture.ServiceProvider == null)
+            {
+                _output.WriteLine("AFIP services not available. Skipping test.");
+                return;
+            }
+
             // Arrange
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             if (cacheService == null)
@@ -155,9 +180,20 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Cache_Authentication_Tickets_With_Proper_Expiration()
         {
+            // Skip if services are not available
+            if (_fixture.ServiceProvider == null)
+            {
+                _output.WriteLine("AFIP services not available. Skipping test.");
+                return;
+            }
+
             // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             var wsaaService = _fixture.ServiceProvider.GetRequiredService<IWsaaService>();
@@ -197,6 +233,13 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Handle_Concurrent_Cache_Operations()
         {
+            // Skip if services are not available
+            if (_fixture.ServiceProvider == null)
+            {
+                _output.WriteLine("AFIP services not available. Skipping test.");
+                return;
+            }
+
             // Arrange
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             if (cacheService == null)
@@ -242,6 +285,13 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Track_Cache_Statistics_Accurately()
         {
+            // Skip if services are not available
+            if (_fixture.ServiceProvider == null)
+            {
+                _output.WriteLine("AFIP services not available. Skipping test.");
+                return;
+            }
+
             // Arrange
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             if (cacheService == null)

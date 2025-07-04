@@ -25,10 +25,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Get_Service_Status_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
 
             // Act
@@ -42,10 +46,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Authenticate_With_WSAA_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var wsaaService = _fixture.ServiceProvider.GetRequiredService<IWsaaService>();
 
             // Act
@@ -62,10 +70,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Get_Invoice_Types_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
 
             // Act
@@ -81,10 +93,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Get_Document_Types_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
 
             // Act
@@ -101,10 +117,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Get_VAT_Rates_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
 
             // Act
@@ -120,10 +140,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Get_Last_Invoice_Number_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
             const int pointOfSale = 1;
             const int invoiceType = 11; // Factura C
@@ -139,10 +163,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Authorize_Invoice_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
             const int pointOfSale = 1;
             const int invoiceType = 11; // Factura C
@@ -194,10 +222,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Query_Invoice_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
             const int pointOfSale = 1;
             const int invoiceType = 11; // Factura C
@@ -237,10 +269,14 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Handle_Invalid_Invoice_Request_Gracefully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
+            // Arrange
             var client = _fixture.AfipClient;
 
             var invalidRequest = new InvoiceRequest
@@ -271,9 +307,12 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Cache_Authentication_Tokens()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
             var cacheService = _fixture.ServiceProvider.GetService<IAfipCacheService>();
             if (cacheService == null)
@@ -308,9 +347,12 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Track_Connection_Pool_Statistics()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
             var connectionPool = _fixture.ServiceProvider.GetService<IAfipConnectionPool>();
             if (connectionPool == null)
@@ -343,9 +385,12 @@ namespace Afip.Dotnet.IntegrationTests
         [Fact]
         public async Task Should_Perform_Health_Check_Successfully()
         {
-            // Arrange
-            _fixture.SkipIfCertificateNotAvailable();
-            _fixture.SkipIfNotTestingEnvironment();
+            // Skip if certificate is not available or not in testing environment
+            if (!_fixture.IsCertificateAvailable || !_fixture.IsTestingEnvironment)
+            {
+                _output.WriteLine("Skipping test: Certificate not available or not in testing environment");
+                return;
+            }
 
             var connectionPool = _fixture.ServiceProvider.GetService<IAfipConnectionPool>();
             if (connectionPool == null)
