@@ -1,6 +1,6 @@
 # AFIP .NET SDK
 
-[![Build Status](https://github.com/nruizneiman/Afip.Dotnet/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/nruizneiman/Afip.Dotnet/actions)
+[![CI/CD Pipeline](https://github.com/nruizneiman/Afip.Dotnet/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/nruizneiman/Afip.Dotnet/actions/workflows/ci-cd.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
 [![Coverage Status](https://codecov.io/gh/nruizneiman/Afip.Dotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/nruizneiman/Afip.Dotnet)
