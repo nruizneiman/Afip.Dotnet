@@ -1,0 +1,174 @@
+using System;
+using System.IO;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Afip.Dotnet.Abstractions.Models;
+using Afip.Dotnet.Abstractions.Services;
+using Afip.Dotnet.Extensions;
+using Xunit;
+
+namespace Afip.Dotnet.IntegrationTests
+{
+    /// <summary>
+    /// Test fixture for integration tests that provides configured AFIP client
+    /// </summary>
+    public class IntegrationTestFixture : IDisposable
+    {
+        public IServiceProvider ServiceProvider { get; private set; }
+        public IAfipClient AfipClient { get; private set; }
+        public AfipConfiguration Configuration { get; private set; }
+        public ILogger<IntegrationTestFixture> Logger { get; private set; }
+
+        public IntegrationTestFixture()
+        {
+            // Build configuration
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.Test.json", optional: true)
+                .AddEnvironmentVariables("AFIP_")
+                .Build();
+
+            // Create AFIP configuration
+            Configuration = CreateAfipConfiguration(configuration);
+
+            // Build service provider
+            var services = new ServiceCollection();
+            
+            // Add logging
+            services.AddLogging(builder =>
+            {
+                builder.AddConsole();
+                builder.SetMinimumLevel(LogLevel.Debug);
+            });
+
+            // Add AFIP services with all optimizations
+            services.AddAfipServicesOptimized(Configuration);
+
+            ServiceProvider = services.BuildServiceProvider();
+            Logger = ServiceProvider.GetRequiredService<ILogger<IntegrationTestFixture>>();
+            AfipClient = ServiceProvider.GetRequiredService<IAfipClient>();
+
+            Logger.LogInformation("Integration test fixture initialized for environment: {Environment}", Configuration.Environment);
+        }
+
+        private AfipConfiguration CreateAfipConfiguration(IConfiguration configuration)
+        {
+            var afipConfig = new AfipConfiguration();
+
+            // Try to load from configuration
+            var cuitString = configuration["Cuit"];
+            var certPath = configuration["CertificatePath"];
+            var certPassword = configuration["CertificatePassword"];
+            var environment = configuration["Environment"];
+
+            if (!string.IsNullOrEmpty(cuitString) && long.TryParse(cuitString, out var cuit))
+            {
+                afipConfig.Cuit = cuit;
+            }
+            else
+            {
+                // Fallback to test values - these should be overridden in CI/CD
+                afipConfig.Cuit = 20123456789; // This is a test CUIT, replace with real one
+            }
+
+            if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
+            {
+                afipConfig.CertificatePath = certPath;
+            }
+            else
+            {
+                // Try to find test certificate in common locations
+                var testCertPaths = new[]
+                {
+                    "certificates/testing.p12",
+                    "test-certificates/testing.p12",
+                    "../../../certificates/testing.p12",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".afip", "testing.p12")
+                };
+
+                foreach (var testPath in testCertPaths)
+                {
+                    if (File.Exists(testPath))
+                    {
+                        afipConfig.CertificatePath = testPath;
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(afipConfig.CertificatePath))
+                {
+                    throw new InvalidOperationException(
+                        "No certificate file found. Please provide a valid certificate path in configuration or " +
+                        "place a test certificate at one of these locations: " + string.Join(", ", testCertPaths));
+                }
+            }
+
+            afipConfig.CertificatePassword = certPassword ?? "test-password";
+
+            if (Enum.TryParse<AfipEnvironment>(environment, out var env))
+            {
+                afipConfig.Environment = env;
+            }
+            else
+            {
+                afipConfig.Environment = AfipEnvironment.Testing; // Default to testing
+            }
+
+            afipConfig.EnableLogging = true;
+            afipConfig.TimeoutSeconds = 60; // Longer timeout for tests
+
+            return afipConfig;
+        }
+
+        /// <summary>
+        /// Skips test if certificate is not available
+        /// </summary>
+        public void SkipIfCertificateNotAvailable()
+        {
+            if (string.IsNullOrEmpty(Configuration.CertificatePath) || !File.Exists(Configuration.CertificatePath))
+            {
+                throw new SkipException("Certificate file not available for integration tests");
+            }
+        }
+
+        /// <summary>
+        /// Skips test if not in testing environment
+        /// </summary>
+        public void SkipIfNotTestingEnvironment()
+        {
+            if (Configuration.Environment != AfipEnvironment.Testing)
+            {
+                throw new SkipException("Test requires AFIP testing environment");
+            }
+        }
+
+        public void Dispose()
+        {
+            if (ServiceProvider is IDisposable disposableServiceProvider)
+            {
+                disposableServiceProvider.Dispose();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Exception thrown to skip a test
+    /// </summary>
+    public class SkipException : Exception
+    {
+        public SkipException(string message) : base(message) { }
+    }
+
+    /// <summary>
+    /// Collection definition for integration tests
+    /// </summary>
+    [CollectionDefinition("AFIP Integration Tests")]
+    public class IntegrationTestCollection : ICollectionFixture<IntegrationTestFixture>
+    {
+        // This class has no code, and is never created. Its purpose is simply
+        // to be the place to apply [CollectionDefinition] and all the
+        // ICollectionFixture<> interfaces.
+    }
+}

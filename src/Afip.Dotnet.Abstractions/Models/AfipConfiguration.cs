@@ -1,62 +1,112 @@
+using System;
+using System.IO;
+
 namespace Afip.Dotnet.Abstractions.Models
 {
     /// <summary>
-    /// Configuration settings for AFIP/ARCA SDK
+    /// Configuration settings for AFIP web services
     /// </summary>
     public class AfipConfiguration
     {
         /// <summary>
-        /// The environment to use (Testing or Production)
+        /// AFIP environment (Testing or Production)
         /// </summary>
         public AfipEnvironment Environment { get; set; } = AfipEnvironment.Testing;
-        
+
         /// <summary>
-        /// The CUIT (tax ID) of the taxpayer
+        /// Company CUIT number
         /// </summary>
         public long Cuit { get; set; }
-        
+
         /// <summary>
-        /// Path to the PKCS#12 certificate file (.p12 or .pfx)
+        /// Path to the X.509 certificate file (.p12/.pfx)
         /// </summary>
         public string CertificatePath { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Password for the certificate file
         /// </summary>
         public string CertificatePassword { get; set; } = string.Empty;
-        
+
         /// <summary>
-        /// Timeout for web service calls in seconds (default: 30 seconds)
+        /// Request timeout in seconds
         /// </summary>
         public int TimeoutSeconds { get; set; } = 30;
-        
+
         /// <summary>
-        /// Whether to enable verbose logging for debugging
+        /// Enable detailed logging
         /// </summary>
         public bool EnableLogging { get; set; } = false;
-        
+
         /// <summary>
-        /// Custom WSAA URL for testing (optional)
+        /// Custom WSAA URL (for testing or alternative endpoints)
         /// </summary>
         public string? CustomWsaaUrl { get; set; }
-        
+
         /// <summary>
-        /// Custom WSFEv1 URL for testing (optional)
+        /// Custom WSFEv1 URL (for testing or alternative endpoints)
         /// </summary>
         public string? CustomWsfev1Url { get; set; }
-        
+
         /// <summary>
-        /// Gets the WSAA service URL based on environment
+        /// Validates the configuration and throws an exception if invalid
         /// </summary>
-        public string WsaaUrl => CustomWsaaUrl ?? (Environment == AfipEnvironment.Production 
-            ? "https://wsaa.afip.gov.ar/ws/services/LoginCms"
-            : "https://wsaahomo.afip.gov.ar/ws/services/LoginCms");
-        
+        /// <exception cref="InvalidOperationException">Thrown when configuration is invalid</exception>
+        public void Validate()
+        {
+            if (Cuit <= 0)
+                throw new InvalidOperationException("CUIT must be a valid positive number");
+
+            if (string.IsNullOrWhiteSpace(CertificatePath))
+                throw new InvalidOperationException("Certificate path is required");
+
+            if (!File.Exists(CertificatePath))
+                throw new InvalidOperationException($"Certificate file not found: {CertificatePath}");
+
+            if (string.IsNullOrWhiteSpace(CertificatePassword))
+                throw new InvalidOperationException("Certificate password is required");
+
+            if (TimeoutSeconds <= 0)
+                throw new InvalidOperationException("Timeout must be greater than 0 seconds");
+
+            if (TimeoutSeconds > 300)
+                throw new InvalidOperationException("Timeout cannot exceed 300 seconds (5 minutes)");
+
+            // Validate CUIT format (should be 11 digits)
+            var cuitString = Cuit.ToString();
+            if (cuitString.Length != 11)
+                throw new InvalidOperationException("CUIT must be exactly 11 digits");
+
+            // Validate certificate file extension
+            var extension = Path.GetExtension(CertificatePath).ToLowerInvariant();
+            if (extension != ".p12" && extension != ".pfx")
+                throw new InvalidOperationException("Certificate file must be in PKCS#12 format (.p12 or .pfx)");
+        }
+
         /// <summary>
-        /// Gets the WSFEv1 service URL based on environment
+        /// Gets the WSAA URL based on environment and custom settings
         /// </summary>
-        public string Wsfev1Url => CustomWsfev1Url ?? (Environment == AfipEnvironment.Production
-            ? "https://servicios1.afip.gov.ar/wsfev1/service.asmx"
-            : "https://wswhomo.afip.gov.ar/wsfev1/service.asmx");
+        public string GetWsaaUrl()
+        {
+            if (!string.IsNullOrWhiteSpace(CustomWsaaUrl))
+                return CustomWsaaUrl;
+
+            return Environment == AfipEnvironment.Testing
+                ? "https://wsaahomo.afip.gov.ar/ws/services/LoginCms"
+                : "https://wsaa.afip.gov.ar/ws/services/LoginCms";
+        }
+
+        /// <summary>
+        /// Gets the WSFEv1 URL based on environment and custom settings
+        /// </summary>
+        public string GetWsfev1Url()
+        {
+            if (!string.IsNullOrWhiteSpace(CustomWsfev1Url))
+                return CustomWsfev1Url;
+
+            return Environment == AfipEnvironment.Testing
+                ? "https://wswhomo.afip.gov.ar/wsfev1/service.asmx"
+                : "https://servicios1.afip.gov.ar/wsfev1/service.asmx";
+        }
     }
 }
