@@ -1,72 +1,151 @@
 # AFIP .NET SDK
 
-[![NuGet](https://img.shields.io/nuget/v/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
+[![Build Status](https://github.com/your-username/afip-dotnet/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/your-username/afip-dotnet/actions)
+[![NuGet Version](https://img.shields.io/nuget/v/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Afip.Dotnet.svg)](https://www.nuget.org/packages/Afip.Dotnet/)
+[![Coverage Status](https://codecov.io/gh/your-username/afip-dotnet/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/afip-dotnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive .NET Standard SDK for integrating with AFIP (ARCA) web services, including electronic invoicing, authentication, and parameter queries.
+A comprehensive and modern .NET SDK for integrating with AFIP (now ARCA - Agencia de Recaudación y Control Aduanero) web services. This SDK provides a clean, async/await-based API for electronic invoicing, authentication, and parameter management.
 
-## Features
+## 🚀 Features
 
-- **Electronic Invoicing (WSFEv1)** - Create, authorize, and query electronic invoices
-- **Authentication (WSAA)** - Certificate-based authentication with automatic ticket caching
-- **Parameter Tables** - Query AFIP parameter tables (invoice types, currencies, VAT rates, etc.)
-- **Multiple Environments** - Support for both testing and production environments
-- **Async/Await** - Full asynchronous API with cancellation token support
-- **Logging Support** - Integrated with Microsoft.Extensions.Logging
-- **Robust Error Handling** - Comprehensive exception handling and validation
-- **Latest Regulations** - Supports RG5616/2024 (FEv4) and other recent AFIP regulations
+- **🔐 WSAA Authentication**: Automatic ticket management with certificate-based authentication
+- **🧾 Electronic Invoicing (WSFEv1)**: Complete support for invoice authorization and management
+- **💰 Foreign Currency Support**: Full compliance with RG 5616/2024 (FEv4)
+- **📊 Parameter Tables**: Dynamic access to AFIP parameter tables
+- **⚡ Async/Await**: Modern asynchronous programming patterns
+- **🛡️ Type Safety**: Strongly-typed models for all AFIP operations
+- **📝 Comprehensive Logging**: Built-in logging support with Microsoft.Extensions.Logging
+- **🧪 Testing Support**: Separate testing and production environments
+- **📦 NuGet Packages**: Easy installation via NuGet
 
-## Installation
+### Supported AFIP Services
 
-Install the package via NuGet Package Manager:
+| Service | Description | Status |
+|---------|-------------|--------|
+| **WSAA** | Web Service Authentication and Authorization | ✅ Complete |
+| **WSFEv1** | Electronic Invoicing for domestic market | ✅ Complete |
+| **WSFEX** | Electronic Invoicing for exports | 🚧 Planned |
+| **WSMTXCA** | Electronic Invoicing with item details | 🚧 Planned |
+
+### Supported Invoice Types
+
+- **Invoice A, B, C** - Standard domestic invoices
+- **FCE MiPyMEs** - Credit invoices for small and medium enterprises (RG 4367/2018)
+- **Foreign Currency Invoices** - USD and other currencies (RG 5616/2024)
+- **Credit and Debit Notes** - With invoice associations
+- **Export Invoices (E)** - For international transactions
+
+### Regulatory Compliance
+
+This SDK implements and supports the following AFIP regulations:
+
+- **RG 2485, RG 2904, RG 3067** - Base electronic invoicing regulations
+- **RG 3668/2014** - Special regimes for restaurants, hotels, and bars
+- **RG 3749/2015** - VAT responsible parties and exempt entities
+- **RG 4367/2018** - FCE MiPyMEs credit invoices
+- **RG 5616/2024** - Foreign currency operations (FEv4)
+
+## 📦 Installation
+
+### NuGet Package Manager
+
+```bash
+Install-Package Afip.Dotnet
+```
+
+### .NET CLI
 
 ```bash
 dotnet add package Afip.Dotnet
 ```
 
-Or via Package Manager Console:
+### PackageReference
 
-```powershell
-Install-Package Afip.Dotnet
+```xml
+<PackageReference Include="Afip.Dotnet" Version="1.0.0" />
 ```
 
-## Quick Start
+## ⚙️ Configuration
 
 ### 1. Certificate Setup
 
-First, you need to obtain a digital certificate from AFIP and convert it to PKCS#12 format:
+First, you need an X.509 certificate from AFIP in PKCS#12 format (.p12 or .pfx):
 
 ```bash
 # Generate private key
-openssl genrsa -out private_key.key 2048
+openssl genrsa -out private.key 2048
 
 # Generate certificate request
-openssl req -new -key private_key.key -out certificate_request.csr
+openssl req -new -key private.key -out certificate.csr -subj "/C=AR/O=YourCompany/CN=YourName/serialNumber=CUIT YourCuit"
 
-# Submit CSR to AFIP and download the certificate
-# Convert to PKCS#12 format
-openssl pkcs12 -export -out certificate.p12 -inkey private_key.key -in certificate.crt
+# After AFIP approves, convert to PKCS#12
+openssl pkcs12 -export -out certificate.p12 -inkey private.key -in certificate.crt
 ```
 
-### 2. Basic Usage
+### 2. Basic Configuration
 
 ```csharp
 using Afip.Dotnet;
 using Afip.Dotnet.Abstractions.Models;
-using Afip.Dotnet.Abstractions.Models.Invoice;
 
-// Create client for testing environment
-var client = AfipClient.CreateForTesting(
-    cuit: 20123456789, 
-    certificatePath: "path/to/certificate.p12", 
-    certificatePassword: "certificate_password"
+var configuration = new AfipConfiguration
+{
+    Environment = AfipEnvironment.Testing, // or AfipEnvironment.Production
+    Cuit = 20123456789,
+    CertificatePath = "path/to/your/certificate.p12",
+    CertificatePassword = "your-certificate-password",
+    TimeoutSeconds = 30
+};
+
+using var client = AfipClient.Create(configuration);
+```
+
+### 3. Factory Methods
+
+For quick setup:
+
+```csharp
+// Testing environment
+using var testingClient = AfipClient.CreateForTesting(
+    cuit: 20123456789,
+    certificatePath: "cert.p12",
+    certificatePassword: "password"
 );
 
-// Test connection
-bool isConnected = await client.TestConnectionAsync();
-Console.WriteLine($"Connected to AFIP: {isConnected}");
+// Production environment
+using var productionClient = AfipClient.CreateForProduction(
+    cuit: 20123456789,
+    certificatePath: "cert.p12",
+    certificatePassword: "password"
+);
+```
 
-// Create and authorize an invoice
+## 🔧 Usage Examples
+
+### Basic Service Status Check
+
+```csharp
+// Check if the service is available
+var status = await client.ElectronicInvoicing.GetServiceStatusAsync();
+Console.WriteLine($"Service Status: {status.Application} - {status.Database} - {status.Authentication}");
+```
+
+### Get Next Invoice Number
+
+```csharp
+// Get the next available invoice number
+var nextNumber = await client.ElectronicInvoicing.GetLastInvoiceNumberAsync(
+    pointOfSale: 1,
+    invoiceType: 11 // Invoice C
+);
+Console.WriteLine($"Next invoice number: {nextNumber + 1}");
+```
+
+### Authorize a Simple Invoice
+
+```csharp
 var invoiceRequest = new InvoiceRequest
 {
     PointOfSale = 1,
@@ -74,19 +153,17 @@ var invoiceRequest = new InvoiceRequest
     Concept = 1, // Products
     DocumentType = 96, // DNI
     DocumentNumber = 12345678,
-    InvoiceNumberFrom = await client.GetNextInvoiceNumberAsync(1, 11),
-    InvoiceNumberTo = await client.GetNextInvoiceNumberAsync(1, 11),
+    InvoiceNumberFrom = 1,
+    InvoiceNumberTo = 1,
     InvoiceDate = DateTime.Today,
     TotalAmount = 121.00m,
     NetAmount = 100.00m,
     VatAmount = 21.00m,
-    CurrencyId = "PES",
-    CurrencyRate = 1.0m,
     VatDetails = new List<VatDetail>
     {
         new VatDetail
         {
-            VatRate = 21.0m,
+            VatRateId = 5, // 21%
             BaseAmount = 100.00m,
             VatAmount = 21.00m
         }
@@ -94,286 +171,350 @@ var invoiceRequest = new InvoiceRequest
 };
 
 var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(invoiceRequest);
-Console.WriteLine($"Invoice authorized with CAE: {response.AuthorizationCode}");
+Console.WriteLine($"CAE: {response.Cae}, Expiration: {response.CaeExpirationDate}");
 ```
 
-## Configuration
-
-### Basic Configuration
+### Foreign Currency Invoice (USD)
 
 ```csharp
-var configuration = new AfipConfiguration
-{
-    Environment = AfipEnvironment.Testing, // or AfipEnvironment.Production
-    Cuit = 20123456789,
-    CertificatePath = "path/to/certificate.p12",
-    CertificatePassword = "password",
-    TimeoutSeconds = 30,
-    EnableLogging = true
-};
-
-var client = new AfipClient(configuration);
-```
-
-### Advanced Configuration
-
-```csharp
-var configuration = new AfipConfiguration
-{
-    Environment = AfipEnvironment.Testing,
-    Cuit = 20123456789,
-    CertificatePath = "certificate.p12",
-    CertificatePassword = "password",
-    TimeoutSeconds = 60,
-    EnableLogging = true,
-    // Custom URLs for testing
-    CustomWsaaUrl = "https://wsaahomo.afip.gov.ar/ws/services/LoginCms",
-    CustomWsfev1Url = "https://wswhomo.afip.gov.ar/wsfev1/service.asmx"
-};
-```
-
-## Electronic Invoicing
-
-### Single Invoice Authorization
-
-```csharp
-var request = new InvoiceRequest
+var usdInvoice = new InvoiceRequest
 {
     PointOfSale = 1,
-    InvoiceType = 1, // Invoice A
-    Concept = 1, // Products
+    InvoiceType = 19, // Invoice E (Export)
+    Concept = 1,
     DocumentType = 80, // CUIT
     DocumentNumber = 20987654321,
     InvoiceNumberFrom = 1,
     InvoiceNumberTo = 1,
     InvoiceDate = DateTime.Today,
-    TotalAmount = 121.00m,
-    NonTaxableAmount = 0m,
-    NetAmount = 100.00m,
-    ExemptAmount = 0m,
-    VatAmount = 21.00m,
-    TaxAmount = 0m,
-    CurrencyId = "PES",
-    CurrencyRate = 1.0m,
+    CurrencyId = "DOL", // USD
+    CurrencyRate = 350.50m, // Exchange rate
+    TotalAmount = 1000.00m,
+    NetAmount = 1000.00m,
+    PayInSameForeignCurrency = true,
+    ReceiverVatCondition = 4 // Foreign consumer
+};
+
+var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(usdInvoice);
+```
+
+### Credit Note with Association
+
+```csharp
+var creditNote = new InvoiceRequest
+{
+    PointOfSale = 1,
+    InvoiceType = 213, // Credit Note C
+    Concept = 1,
+    DocumentType = 96,
+    DocumentNumber = 12345678,
+    InvoiceNumberFrom = 1,
+    InvoiceNumberTo = 1,
+    InvoiceDate = DateTime.Today,
+    TotalAmount = 50.00m,
+    NetAmount = 41.32m,
+    VatAmount = 8.68m,
+    
+    // Associate with original invoice
+    AssociatedInvoices = new List<AssociatedInvoice>
+    {
+        new AssociatedInvoice
+        {
+            InvoiceType = 11,
+            PointOfSale = 1,
+            InvoiceNumber = 123
+        }
+    },
+    
     VatDetails = new List<VatDetail>
     {
-        new VatDetail { VatRate = 21.0m, BaseAmount = 100.00m, VatAmount = 21.00m }
+        new VatDetail
+        {
+            VatRateId = 5,
+            BaseAmount = 41.32m,
+            VatAmount = 8.68m
+        }
     }
 };
 
-var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
+var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(creditNote);
 ```
 
-### Batch Invoice Authorization
+### Query Existing Invoice
 
 ```csharp
-var requests = new List<InvoiceRequest> { request1, request2, request3 };
-var responses = await client.ElectronicInvoicing.AuthorizeInvoicesAsync(requests);
+var invoice = await client.ElectronicInvoicing.GetInvoiceAsync(
+    pointOfSale: 1,
+    invoiceType: 11,
+    invoiceNumber: 123
+);
 
-foreach (var response in responses)
+Console.WriteLine($"Invoice Amount: {invoice.TotalAmount}");
+Console.WriteLine($"CAE: {invoice.Cae}");
+Console.WriteLine($"Authorized: {invoice.AuthorizationDate}");
+```
+
+### Batch Invoice Processing
+
+```csharp
+var batchRequests = new List<InvoiceRequest>
 {
-    Console.WriteLine($"Invoice {response.InvoiceNumber}: {response.Result}");
+    // Create multiple invoice requests...
+    invoice1,
+    invoice2,
+    invoice3
+};
+
+var responses = new List<InvoiceResponse>();
+
+foreach (var request in batchRequests)
+{
+    try
+    {
+        var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
+        responses.Add(response);
+        Console.WriteLine($"Invoice {request.InvoiceNumberFrom} authorized with CAE: {response.Cae}");
+    }
+    catch (AfipException ex)
+    {
+        Console.WriteLine($"Error authorizing invoice {request.InvoiceNumberFrom}: {ex.Message}");
+    }
 }
 ```
 
-### Query Invoice Information
+### Working with Parameter Tables
 
 ```csharp
-var invoice = await client.ElectronicInvoicing.QueryInvoiceAsync(
-    pointOfSale: 1, 
-    invoiceType: 1, 
-    invoiceNumber: 123
-);
-```
-
-### Get Last Invoice Number
-
-```csharp
-var lastNumber = await client.ElectronicInvoicing.GetLastInvoiceNumberAsync(
-    pointOfSale: 1, 
-    invoiceType: 1
-);
-var nextNumber = lastNumber + 1;
-```
-
-## Parameter Tables
-
-### Get Invoice Types
-
-```csharp
+// Get invoice types
 var invoiceTypes = await client.Parameters.GetInvoiceTypesAsync();
 foreach (var type in invoiceTypes)
 {
     Console.WriteLine($"{type.Id}: {type.Description}");
 }
-```
 
-### Get VAT Rates
-
-```csharp
-var vatRates = await client.Parameters.GetVatRatesAsync();
-var activeRates = vatRates.Where(r => r.IsActive).ToList();
-```
-
-### Get Currencies and Exchange Rates
-
-```csharp
+// Get currencies
 var currencies = await client.Parameters.GetCurrenciesAsync();
-var usdRate = await client.Parameters.GetCurrencyRateAsync("DOL", DateTime.Today);
-```
+var usd = currencies.FirstOrDefault(c => c.Id == "DOL");
+Console.WriteLine($"USD Rate: {usd?.Rate}");
 
-### Other Parameter Tables
-
-```csharp
-// Document types (DNI, CUIT, etc.)
-var documentTypes = await client.Parameters.GetDocumentTypesAsync();
-
-// Concept types (Products, Services, etc.)
-var conceptTypes = await client.Parameters.GetConceptTypesAsync();
-
-// Tax types
-var taxTypes = await client.Parameters.GetTaxTypesAsync();
-
-// VAT conditions for receivers
-var vatConditions = await client.Parameters.GetReceiverVatConditionsAsync("A");
-```
-
-## Invoice Types and Regulations
-
-### Supported Invoice Types
-
-| Code | Description | Regulation |
-|------|-------------|------------|
-| 1 | Invoice A | General |
-| 6 | Invoice B | General |
-| 11 | Invoice C | General |
-| 201 | Credit Note A | General |
-| 206 | Credit Note B | General |
-| 211 | Credit Note C | General |
-| 202 | Debit Note A | General |
-| 207 | Debit Note B | General |
-| 212 | Debit Note C | General |
-| 19 | Electronic Invoice FCE A (MiPyMEs) | RG4367/2018 |
-| 20 | Electronic Invoice FCE B (MiPyMEs) | RG4367/2018 |
-| 21 | Electronic Invoice FCE C (MiPyMEs) | RG4367/2018 |
-
-### Foreign Currency Support (FEv4)
-
-The SDK supports the latest RG5616/2024 regulation for foreign currency transactions:
-
-```csharp
-var request = new InvoiceRequest
+// Get VAT rates
+var vatRates = await client.Parameters.GetVatRatesAsync();
+foreach (var rate in vatRates)
 {
-    // ... basic fields ...
-    CurrencyId = "DOL", // US Dollar
-    CurrencyRate = 350.50m, // Exchange rate
-    PayInSameForeignCurrency = true, // FEv4 requirement
-    ReceiverVatCondition = 1, // Required for FEv4
-    // ... other fields ...
-};
+    Console.WriteLine($"{rate.Id}: {rate.Description} - {rate.Percentage}%");
+}
+
+// Get document types
+var documentTypes = await client.Parameters.GetDocumentTypesAsync();
+var cuit = documentTypes.FirstOrDefault(d => d.Id == 80);
+Console.WriteLine($"CUIT: {cuit?.Description}");
 ```
 
-## Error Handling
+## 🔒 Authentication Management
+
+The SDK automatically handles WSAA authentication:
+
+```csharp
+// Authentication is handled automatically, but you can access it directly
+var ticket = await client.Authentication.GetValidTicketAsync("wsfe");
+Console.WriteLine($"Token expires at: {ticket.ExpiresAt}");
+
+// Force ticket renewal
+await client.Authentication.RefreshTicketAsync("wsfe");
+
+// Check ticket status
+var isValid = ticket.IsValid;
+var willExpireSoon = ticket.WillExpireSoon(10); // Check if expires in 10 minutes
+```
+
+## 🚨 Error Handling
 
 ```csharp
 try
 {
     var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
-    
-    if (response.Errors?.Any() == true)
-    {
-        foreach (var error in response.Errors)
-        {
-            Console.WriteLine($"Error {error.Code}: {error.Message}");
-        }
-    }
-    
-    if (response.Observations?.Any() == true)
-    {
-        foreach (var obs in response.Observations)
-        {
-            Console.WriteLine($"Observation {obs.Code}: {obs.Message}");
-        }
-    }
 }
 catch (AfipException ex)
 {
     Console.WriteLine($"AFIP Error: {ex.Message}");
+    Console.WriteLine($"Error Code: {ex.ErrorCode}");
+    
     if (ex.InnerException != null)
     {
         Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
     }
 }
+catch (HttpRequestException ex)
+{
+    Console.WriteLine($"Network Error: {ex.Message}");
+}
+catch (TaskCanceledException ex)
+{
+    Console.WriteLine($"Request Timeout: {ex.Message}");
+}
 ```
 
-## Logging
+## 📝 Logging
 
-The SDK integrates with Microsoft.Extensions.Logging:
+The SDK supports Microsoft.Extensions.Logging:
 
 ```csharp
 using Microsoft.Extensions.Logging;
 
-var loggerFactory = LoggerFactory.Create(builder => 
+// Configure logging
+var loggerFactory = LoggerFactory.Create(builder =>
     builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
 
 var logger = loggerFactory.CreateLogger<AfipClient>();
-var client = new AfipClient(configuration, logger);
+
+// Create client with logging
+var config = new AfipConfiguration
+{
+    // ... configuration
+    EnableLogging = true
+};
+
+using var client = new AfipClient(config, logger);
 ```
 
-## Testing
+## 🧪 Testing
 
-For testing, use the AFIP testing environment with your testing certificate:
+The SDK includes comprehensive unit tests and supports both testing and production environments:
+
+```bash
+# Run all tests
+dotnet test
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run specific test category
+dotnet test --filter Category=Unit
+```
+
+### Test Configuration
 
 ```csharp
-var client = AfipClient.CreateForTesting(
-    cuit: 20123456789,
-    certificatePath: "testing_certificate.p12",
-    certificatePassword: "password"
-);
-
-// Test endpoints:
-// WSAA: https://wsaahomo.afip.gov.ar/ws/services/LoginCms
-// WSFEv1: https://wswhomo.afip.gov.ar/wsfev1/service.asmx
+// Use AFIP's testing environment
+var testConfig = new AfipConfiguration
+{
+    Environment = AfipEnvironment.Testing,
+    Cuit = 20123456789, // Use AFIP's test CUIT
+    CertificatePath = "test-certificate.p12",
+    CertificatePassword = "test-password"
+};
 ```
 
-## Production Deployment
+## 📊 Performance Considerations
 
-For production, ensure you:
+- **Connection Pooling**: The SDK reuses HTTP connections
+- **Ticket Caching**: Authentication tickets are cached and automatically renewed
+- **Async Operations**: All operations are asynchronous for better scalability
+- **Memory Efficiency**: Minimal memory footprint with proper disposal patterns
 
-1. Use production certificates from AFIP
-2. Set environment to `AfipEnvironment.Production`
-3. Enable logging for monitoring
-4. Implement proper error handling
-5. Cache authentication tickets appropriately
+## 🔄 Migration from Other Libraries
+
+If you're migrating from other AFIP libraries:
 
 ```csharp
-var client = AfipClient.CreateForProduction(
-    cuit: yourProductionCuit,
-    certificatePath: "production_certificate.p12",
-    certificatePassword: Environment.GetEnvironmentVariable("AFIP_CERT_PASSWORD")
-);
+// Old library pattern
+var oldClient = new SomeAfipLibrary();
+var result = oldClient.AutorizarComprobante(data);
+
+// New SDK pattern
+using var newClient = AfipClient.CreateForProduction(cuit, certPath, certPassword);
+var response = await newClient.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
 ```
 
-## Contributing
+## 🛠️ Advanced Configuration
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+### Custom HTTP Client
 
-## License
+```csharp
+var httpClient = new HttpClient();
+httpClient.DefaultRequestHeaders.Add("User-Agent", "MyApp/1.0");
+
+var config = new AfipConfiguration
+{
+    // ... other settings
+    CustomHttpClient = httpClient
+};
+```
+
+### Custom URLs (for testing)
+
+```csharp
+var config = new AfipConfiguration
+{
+    Environment = AfipEnvironment.Testing,
+    CustomWsaaUrl = "https://custom-wsaa-url",
+    CustomWsfev1Url = "https://custom-wsfev1-url",
+    // ... other settings
+};
+```
+
+## 📋 Requirements
+
+- **.NET Standard 2.0** or higher
+- **.NET Framework 4.6.1** or higher
+- **.NET Core 2.0** or higher
+- **.NET 5.0** or higher
+
+### Dependencies
+
+- `System.ServiceModel.Http` (>= 4.10.0)
+- `System.Security.Cryptography.Pkcs` (>= 6.0.0)
+- `Microsoft.Extensions.Logging.Abstractions` (>= 6.0.0)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+1. Clone the repository
+2. Install .NET 6.0 SDK or later
+3. Run `dotnet restore`
+4. Run `dotnet build`
+5. Run `dotnet test`
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Disclaimer
+## 🔗 Related Links
 
-This SDK is not officially endorsed by AFIP. Use at your own risk and ensure compliance with current AFIP regulations.
+- [AFIP Documentation](https://www.afip.gob.ar/ws/)
+- [ARCA Official Site](https://www.argentina.gob.ar/arca)
+- [Electronic Invoicing Regulations](https://www.afip.gob.ar/facturae/)
+- [WSFEv1 Specification](https://www.afip.gob.ar/ws/WSFE/WSFE-manual_desarrollador.pdf)
 
-## Support
+## ❓ FAQ
 
-- Check the [AFIP official documentation](https://www.afip.gob.ar/fe/documentos/)
-- Review the [RG5616/2024 regulation](https://www.afip.gob.ar/fe/documentos/RG5616.pdf) for FEv4 requirements
-- For SDK issues, please open a GitHub issue
+**Q: Do I need to register with AFIP to use this SDK?**
+A: Yes, you need to be registered with AFIP and have a valid certificate for electronic invoicing.
 
-## Related Links
+**Q: Can I use this in production immediately?**
+A: Yes, but make sure to test thoroughly in AFIP's testing environment first.
 
-- [AFIP Official Website](https://www.afip.gob.ar/)
-- [Electronic Invoicing Documentation](https://www.afip.gob.ar/fe/)
-- [Testing Environment Access](https://www.afip.gob.ar/fe/documentos/manual_desarrollador_COMPG_v2_4.pdf)
+**Q: What's the difference between Invoice A, B, and C?**
+A: 
+- Invoice A: For VAT registered entities
+- Invoice B: For final consumers (individuals)
+- Invoice C: For exempt entities
+
+**Q: How do I handle certificate expiration?**
+A: The SDK will throw an `AfipException` when the certificate expires. You'll need to renew it through AFIP.
+
+**Q: Is this SDK thread-safe?**
+A: Yes, the SDK is designed to be thread-safe and can be used in multi-threaded applications.
+
+## 📞 Support
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/your-username/afip-dotnet/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/your-username/afip-dotnet/discussions)
+- **Documentation**: [Comprehensive guides and API reference](https://your-username.github.io/afip-dotnet/)
+
+---
+
+Made with ❤️ for the Argentine .NET community
