@@ -53,6 +53,8 @@ namespace Afip.Dotnet.DependencyInjection.Extensions
             // Register core services
             services.AddScoped<IWsaaService, WsaaService>();
             services.AddScoped<IWsfev1Service, Wsfev1Service>();
+            services.AddScoped<IWsfexService, WsfexService>();
+            services.AddScoped<IWsmtxcaService, WsmtxcaService>();
             services.AddScoped<IAfipParametersService, AfipParametersService>();
             services.AddScoped<IAfipClient, AfipClient>();
 

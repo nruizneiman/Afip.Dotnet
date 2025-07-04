@@ -49,6 +49,16 @@ namespace Afip.Dotnet.Abstractions.Models
         public string? CustomWsfev1Url { get; set; }
 
         /// <summary>
+        /// Custom WSFEX URL (for testing or alternative endpoints)
+        /// </summary>
+        public string? CustomWsfexUrl { get; set; }
+
+        /// <summary>
+        /// Custom WSMTXCA URL (for testing or alternative endpoints)
+        /// </summary>
+        public string? CustomWsmtxcaUrl { get; set; }
+
+        /// <summary>
         /// Validates the configuration and throws an exception if invalid
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when configuration is invalid</exception>
@@ -107,6 +117,32 @@ namespace Afip.Dotnet.Abstractions.Models
             return Environment == AfipEnvironment.Testing
                 ? "https://wswhomo.afip.gov.ar/wsfev1/service.asmx"
                 : "https://servicios1.afip.gov.ar/wsfev1/service.asmx";
+        }
+
+        /// <summary>
+        /// Gets the WSFEX URL based on environment and custom settings
+        /// </summary>
+        public string GetWsfexUrl()
+        {
+            if (!string.IsNullOrWhiteSpace(CustomWsfexUrl))
+                return CustomWsfexUrl;
+
+            return Environment == AfipEnvironment.Testing
+                ? "https://wswhomo.afip.gov.ar/wsfex/service.asmx"
+                : "https://servicios1.afip.gov.ar/wsfex/service.asmx";
+        }
+
+        /// <summary>
+        /// Gets the WSMTXCA URL based on environment and custom settings
+        /// </summary>
+        public string GetWsmtxcaUrl()
+        {
+            if (!string.IsNullOrWhiteSpace(CustomWsmtxcaUrl))
+                return CustomWsmtxcaUrl;
+
+            return Environment == AfipEnvironment.Testing
+                ? "https://wswhomo.afip.gov.ar/wsmtxca/service.asmx"
+                : "https://servicios1.afip.gov.ar/wsmtxca/service.asmx";
         }
     }
 }

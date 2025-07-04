@@ -27,8 +27,8 @@ A comprehensive and modern .NET SDK for integrating with AFIP (now ARCA - Agenci
 |---------|-------------|--------|
 | **WSAA** | Web Service Authentication and Authorization | ✅ Complete |
 | **WSFEv1** | Electronic Invoicing for domestic market | ✅ Complete |
-| **WSFEX** | Electronic Invoicing for exports | 🚧 Planned |
-| **WSMTXCA** | Electronic Invoicing with item details | 🚧 Planned |
+| **WSFEX** | Electronic Invoicing for exports | ✅ Complete |
+| **WSMTXCA** | Electronic Invoicing with item details | ✅ Complete |
 
 ### Supported Invoice Types
 
@@ -198,6 +198,87 @@ var usdInvoice = new InvoiceRequest
 };
 
 var response = await client.ElectronicInvoicing.AuthorizeInvoiceAsync(usdInvoice);
+```
+
+### Export Invoice (WSFEX)
+
+```csharp
+var exportInvoice = new ExportInvoiceRequest
+{
+    PointOfSale = 1,
+    InvoiceType = 19, // Invoice E (Export)
+    InvoiceNumberFrom = 1,
+    InvoiceNumberTo = 1,
+    InvoiceDate = DateTime.Today,
+    DocumentType = 80, // CUIT
+    DocumentNumber = 20987654321,
+    ReceiverName = "International Buyer Corp",
+    ReceiverAddress = "123 Main St",
+    ReceiverCity = "New York",
+    ReceiverCountryCode = "US",
+    CurrencyId = "DOL", // USD
+    CurrencyRate = 350.50m,
+    TotalAmount = 1000.00m,
+    NetAmount = 1000.00m,
+    VatAmount = 0.00m,
+    ExportDestination = 3, // Other countries
+    Incoterm = 3, // FOB
+    Language = 2 // English
+};
+
+var exportResponse = await client.ExportInvoicing.AuthorizeExportInvoiceAsync(exportInvoice);
+Console.WriteLine($"Export CAE: {exportResponse.Cae}");
+```
+
+### Detailed Invoice with Items (WSMTXCA)
+
+```csharp
+var detailedInvoice = new DetailedInvoiceRequest
+{
+    PointOfSale = 1,
+    InvoiceType = 11, // Invoice C
+    InvoiceNumberFrom = 1,
+    InvoiceNumberTo = 1,
+    InvoiceDate = DateTime.Today,
+    DocumentType = 96, // DNI
+    DocumentNumber = 12345678,
+    ReceiverName = "Juan Pérez",
+    ReceiverAddress = "Av. Corrientes 123",
+    ReceiverCity = "Buenos Aires",
+    ReceiverPostalCode = "1043",
+    ReceiverVatCondition = 5, // Consumidor Final
+    TotalAmount = 242.00m,
+    NetAmount = 200.00m,
+    VatAmount = 42.00m,
+    Items = new List<InvoiceItem>
+    {
+        new InvoiceItem
+        {
+            Description = "Laptop HP Pavilion",
+            Quantity = 1,
+            UnitPrice = 200.00m,
+            TotalAmount = 242.00m,
+            NetAmount = 200.00m,
+            VatAmount = 42.00m,
+            UnitOfMeasurement = 6, // Unit
+            ItemCategory = 1, // Products
+            ItemType = 1, // Goods
+            VatRate = 5 // 21%
+        }
+    },
+    VatDetails = new List<VatDetail>
+    {
+        new VatDetail
+        {
+            VatRateId = 5, // 21%
+            BaseAmount = 200.00m,
+            VatAmount = 42.00m
+        }
+    }
+};
+
+var detailedResponse = await client.DetailedInvoicing.AuthorizeDetailedInvoiceAsync(detailedInvoice);
+Console.WriteLine($"Detailed Invoice CAE: {detailedResponse.Cae}");
 ```
 
 ### Credit Note with Association

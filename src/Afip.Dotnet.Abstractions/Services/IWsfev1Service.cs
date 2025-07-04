@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Afip.Dotnet.Abstractions.Models.Invoice;
+using Afip.Dotnet.Abstractions.Models;
 
 namespace Afip.Dotnet.Abstractions.Services
 {
@@ -51,31 +52,5 @@ namespace Afip.Dotnet.Abstractions.Services
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Service status information</returns>
         Task<ServiceStatus> CheckServiceStatusAsync(CancellationToken cancellationToken = default);
-    }
-    
-    /// <summary>
-    /// Represents the status of web service components
-    /// </summary>
-    public class ServiceStatus
-    {
-        /// <summary>
-        /// Application server status
-        /// </summary>
-        public string AppServer { get; set; } = string.Empty;
-        
-        /// <summary>
-        /// Database server status
-        /// </summary>
-        public string DbServer { get; set; } = string.Empty;
-        
-        /// <summary>
-        /// Authentication server status
-        /// </summary>
-        public string AuthServer { get; set; } = string.Empty;
-        
-        /// <summary>
-        /// Whether all services are operational
-        /// </summary>
-        public bool IsHealthy => AppServer == "OK" && DbServer == "OK" && AuthServer == "OK";
     }
 }

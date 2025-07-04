@@ -16,6 +16,16 @@ namespace Afip.Dotnet.Abstractions.Services
         IWsfev1Service ElectronicInvoicing { get; }
         
         /// <summary>
+        /// WSFEX export invoicing service
+        /// </summary>
+        IWsfexService ExportInvoicing { get; }
+        
+        /// <summary>
+        /// WSMTXCA detailed invoicing service
+        /// </summary>
+        IWsmtxcaService DetailedInvoicing { get; }
+        
+        /// <summary>
         /// AFIP parameters service
         /// </summary>
         IAfipParametersService Parameters { get; }

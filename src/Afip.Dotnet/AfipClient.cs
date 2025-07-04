@@ -15,6 +15,8 @@ namespace Afip.Dotnet
         private readonly ILogger<AfipClient>? _logger;
         private readonly Lazy<IWsaaService> _authenticationService;
         private readonly Lazy<IWsfev1Service> _electronicInvoicingService;
+        private readonly Lazy<IWsfexService> _exportInvoicingService;
+        private readonly Lazy<IWsmtxcaService> _detailedInvoicingService;
         private readonly Lazy<IAfipParametersService> _parametersService;
 
         /// <summary>
@@ -36,6 +38,12 @@ namespace Afip.Dotnet
             _electronicInvoicingService = new Lazy<IWsfev1Service>(() => 
                 new Wsfev1Service(_configuration, Authentication, null));
 
+            _exportInvoicingService = new Lazy<IWsfexService>(() => 
+                new WsfexService(Authentication, Parameters, _logger, _configuration));
+
+            _detailedInvoicingService = new Lazy<IWsmtxcaService>(() => 
+                new WsmtxcaService(Authentication, Parameters, _logger, _configuration));
+
             _parametersService = new Lazy<IAfipParametersService>(() => 
                 new AfipParametersService(_configuration, Authentication, null));
 
@@ -52,6 +60,16 @@ namespace Afip.Dotnet
         /// WSFEv1 electronic invoicing service
         /// </summary>
         public IWsfev1Service ElectronicInvoicing => _electronicInvoicingService.Value;
+
+        /// <summary>
+        /// WSFEX export invoicing service
+        /// </summary>
+        public IWsfexService ExportInvoicing => _exportInvoicingService.Value;
+
+        /// <summary>
+        /// WSMTXCA detailed invoicing service
+        /// </summary>
+        public IWsmtxcaService DetailedInvoicing => _detailedInvoicingService.Value;
 
         /// <summary>
         /// AFIP parameters service
@@ -158,7 +176,7 @@ namespace Afip.Dotnet
             try
             {
                 var status = await client.ElectronicInvoicing.CheckServiceStatusAsync();
-                return status.IsHealthy;
+                return status.IsAvailable;
             }
             catch
             {
