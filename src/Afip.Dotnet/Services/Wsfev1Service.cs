@@ -60,7 +60,7 @@ namespace Afip.Dotnet.Services
                     responses.Add(invoiceResponse);
 
                     _logger?.LogInformation("Invoice authorized: Point of Sale {PointOfSale}, Number {InvoiceNumber}, CAE {CAE}",
-                        request.PointOfSale, request.InvoiceNumberFrom, invoiceResponse.AuthorizationCode);
+                        request.PointOfSale, request.InvoiceNumberFrom, invoiceResponse.Cae);
                 }
 
                 return responses;
@@ -217,17 +217,17 @@ namespace Afip.Dotnet.Services
                         FchVtoPago = request.PaymentDueDate?.ToString("yyyyMMdd"),
                         Iva = request.VatDetails?.Select(v => new AlicIva
                         {
-                            Id = GetVatId(v.VatRate),
+                            Id = GetVatId(v.VatRateId),
                             BaseImp = v.BaseAmount,
                             Importe = v.VatAmount
                         }).ToArray(),
                         Tributos = request.TaxDetails?.Select(t => new Tributo
                         {
-                            Id = t.TaxId,
+                            Id = t.TaxTypeId,
                             Desc = t.Description,
                             BaseImp = t.BaseAmount,
-                            Alic = t.Rate,
-                            Importe = t.Amount
+                            Alic = t.TaxRate,
+                            Importe = t.TaxAmount
                         }).ToArray(),
                         CbtesAsoc = request.AssociatedInvoices?.Select(a => new CbteAsoc
                         {
@@ -237,7 +237,7 @@ namespace Afip.Dotnet.Services
                         }).ToArray(),
                         Opcionales = request.OptionalData?.Select(o => new Opcional
                         {
-                            Id = o.Id,
+                            Id = o.Id.ToString(),
                             Valor = o.Value
                         }).ToArray()
                     }

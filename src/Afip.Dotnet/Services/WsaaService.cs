@@ -21,7 +21,7 @@ namespace Afip.Dotnet.Services
     {
         private readonly AfipConfiguration _configuration;
         private readonly ILogger<WsaaService>? _logger;
-        private readonly ConcurrentDictionary<string, AfipAuthTicket> _ticketCache = new();
+        private readonly ConcurrentDictionary<string, AfipAuthTicket> _ticketCache = new ConcurrentDictionary<string, AfipAuthTicket>();
 
         public WsaaService(AfipConfiguration configuration, ILogger<WsaaService>? logger = null)
         {
@@ -175,7 +175,7 @@ namespace Afip.Dotnet.Services
             {
                 Token = token,
                 Sign = sign,
-                ExpirationTime = DateTime.UtcNow.AddHours(12)
+                ExpiresAt = DateTime.UtcNow.AddHours(12)
             };
         }
 
