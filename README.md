@@ -466,7 +466,434 @@ var config = new AfipConfiguration
 - `System.Security.Cryptography.Pkcs` (>= 6.0.0)
 - `Microsoft.Extensions.Logging.Abstractions` (>= 6.0.0)
 
-## 🤝 Contributing
+## � Dependency Injection
+
+The AFIP SDK provides seamless integration with Microsoft.Extensions.DependencyInjection, making it easy to use in ASP.NET Core, Worker Services, and other .NET applications.
+
+### Installation
+
+First, install the AFIP SDK package:
+
+```bash
+dotnet add package Afip.Dotnet
+```
+
+### Basic Registration
+
+```csharp
+using Afip.Dotnet.Extensions;
+using Afip.Dotnet.Abstractions.Models;
+
+// Register AFIP services with configuration
+services.AddAfipServices(new AfipConfiguration
+{
+    Environment = AfipEnvironment.Testing,
+    Cuit = 20123456789,
+    CertificatePath = "path/to/certificate.p12",
+    CertificatePassword = "certificate-password",
+    EnableLogging = true
+});
+```
+
+### Configuration-based Registration
+
+```csharp
+// Register with action-based configuration
+services.AddAfipServices(config =>
+{
+    config.Environment = AfipEnvironment.Production;
+    config.Cuit = 20123456789;
+    config.CertificatePath = "certificates/production.p12";
+    config.CertificatePassword = Environment.GetEnvironmentVariable("AFIP_CERT_PASSWORD");
+    config.TimeoutSeconds = 60;
+    config.EnableLogging = true;
+});
+```
+
+### Quick Setup Methods
+
+```csharp
+// For testing environment
+services.AddAfipServicesForTesting(
+    cuit: 20123456789,
+    certificatePath: "test-cert.p12", 
+    certificatePassword: "test-password"
+);
+
+// For production environment
+services.AddAfipServicesForProduction(
+    cuit: 20123456789,
+    certificatePath: "prod-cert.p12",
+    certificatePassword: Environment.GetEnvironmentVariable("CERT_PASSWORD")!
+);
+```
+
+## 📱 Usage Examples with Dependency Injection
+
+### ASP.NET Core Web API
+
+```csharp
+// Program.cs (.NET 6+)
+using Afip.Dotnet.Extensions;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add AFIP services
+builder.Services.AddAfipServicesForTesting(
+    cuit: 20123456789,
+    certificatePath: "certificates/testing.p12",
+    certificatePassword: builder.Configuration["Afip:CertificatePassword"]!
+);
+
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+app.MapControllers();
+app.Run();
+
+// Controllers/InvoiceController.cs
+using Microsoft.AspNetCore.Mvc;
+using Afip.Dotnet.Abstractions.Services;
+using Afip.Dotnet.Abstractions.Models.Invoice;
+
+[ApiController]
+[Route("api/[controller]")]
+public class InvoiceController : ControllerBase
+{
+    private readonly IAfipClient _afipClient;
+    private readonly ILogger<InvoiceController> _logger;
+
+    public InvoiceController(IAfipClient afipClient, ILogger<InvoiceController> logger)
+    {
+        _afipClient = afipClient;
+        _logger = logger;
+    }
+
+    [HttpPost("authorize")]
+    public async Task<IActionResult> AuthorizeInvoice([FromBody] InvoiceRequest request)
+    {
+        try
+        {
+            var response = await _afipClient.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
+            
+            _logger.LogInformation("Invoice authorized with CAE: {Cae}", response.Cae);
+            
+            return Ok(new
+            {
+                Success = true,
+                Cae = response.Cae,
+                ExpirationDate = response.CaeExpirationDate,
+                InvoiceNumber = request.InvoiceNumberFrom
+            });
+        }
+        catch (AfipException ex)
+        {
+            _logger.LogError(ex, "AFIP error while authorizing invoice");
+            return BadRequest(new { Error = ex.Message, Code = ex.ErrorCode });
+        }
+    }
+
+    [HttpGet("next-number/{pointOfSale}/{invoiceType}")]
+    public async Task<IActionResult> GetNextInvoiceNumber(int pointOfSale, int invoiceType)
+    {
+        try
+        {
+            var lastNumber = await _afipClient.ElectronicInvoicing.GetLastInvoiceNumberAsync(
+                pointOfSale, invoiceType);
+            
+            return Ok(new { NextNumber = lastNumber + 1 });
+        }
+        catch (AfipException ex)
+        {
+            _logger.LogError(ex, "Error getting next invoice number");
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpGet("status")]
+    public async Task<IActionResult> GetServiceStatus()
+    {
+        try
+        {
+            var status = await _afipClient.ElectronicInvoicing.GetServiceStatusAsync();
+            return Ok(status);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking service status");
+            return StatusCode(500, new { Error = "Service unavailable" });
+        }
+    }
+}
+```
+
+### Worker Service Background Processing
+
+```csharp
+// Program.cs
+using Afip.Dotnet.Extensions;
+
+var builder = Host.CreateApplicationBuilder(args);
+
+// Add AFIP services
+builder.Services.AddAfipServicesForProduction(
+    cuit: long.Parse(builder.Configuration["Afip:Cuit"]!),
+    certificatePath: builder.Configuration["Afip:CertificatePath"]!,
+    certificatePassword: builder.Configuration["Afip:CertificatePassword"]!
+);
+
+builder.Services.AddHostedService<InvoiceProcessorWorker>();
+
+var host = builder.Build();
+host.Run();
+
+// InvoiceProcessorWorker.cs
+using Afip.Dotnet.Abstractions.Services;
+using Afip.Dotnet.Abstractions.Models.Invoice;
+
+public class InvoiceProcessorWorker : BackgroundService
+{
+    private readonly IAfipClient _afipClient;
+    private readonly ILogger<InvoiceProcessorWorker> _logger;
+
+    public InvoiceProcessorWorker(IAfipClient afipClient, ILogger<InvoiceProcessorWorker> logger)
+    {
+        _afipClient = afipClient;
+        _logger = logger;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                // Process pending invoices from database/queue
+                var pendingInvoices = await GetPendingInvoicesFromDatabase();
+
+                foreach (var invoiceData in pendingInvoices)
+                {
+                    var request = MapToInvoiceRequest(invoiceData);
+                    
+                    var response = await _afipClient.ElectronicInvoicing
+                        .AuthorizeInvoiceAsync(request, stoppingToken);
+                    
+                    await UpdateInvoiceInDatabase(invoiceData.Id, response);
+                    
+                    _logger.LogInformation("Processed invoice {InvoiceId} with CAE {Cae}", 
+                        invoiceData.Id, response.Cae);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing invoices");
+            }
+
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        }
+    }
+
+    private async Task<List<InvoiceData>> GetPendingInvoicesFromDatabase()
+    {
+        // Implementation to get pending invoices
+        return new List<InvoiceData>();
+    }
+
+    private InvoiceRequest MapToInvoiceRequest(InvoiceData data)
+    {
+        // Implementation to map from your data model to InvoiceRequest
+        return new InvoiceRequest();
+    }
+
+    private async Task UpdateInvoiceInDatabase(int invoiceId, InvoiceResponse response)
+    {
+        // Implementation to update invoice with AFIP response
+    }
+}
+```
+
+### Console Application
+
+```csharp
+// Program.cs
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Afip.Dotnet.Extensions;
+using Afip.Dotnet.Abstractions.Services;
+using Afip.Dotnet.Abstractions.Models.Invoice;
+
+var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context, services) =>
+    {
+        // Add AFIP services
+        services.AddAfipServicesForTesting(
+            cuit: 20123456789,
+            certificatePath: "certificates/testing.p12",
+            certificatePassword: "test-password"
+        );
+        
+        services.AddScoped<InvoiceProcessor>();
+    })
+    .Build();
+
+// Run the application
+using var scope = host.Services.CreateScope();
+var processor = scope.ServiceProvider.GetRequiredService<InvoiceProcessor>();
+await processor.ProcessInvoiceAsync();
+
+public class InvoiceProcessor
+{
+    private readonly IAfipClient _afipClient;
+    private readonly ILogger<InvoiceProcessor> _logger;
+
+    public InvoiceProcessor(IAfipClient afipClient, ILogger<InvoiceProcessor> logger)
+    {
+        _afipClient = afipClient;
+        _logger = logger;
+    }
+
+    public async Task ProcessInvoiceAsync()
+    {
+        try
+        {
+            // Check service status
+            var status = await _afipClient.ElectronicInvoicing.GetServiceStatusAsync();
+            _logger.LogInformation("AFIP Service Status: {Status}", status.Application);
+
+            // Get next invoice number
+            var lastNumber = await _afipClient.ElectronicInvoicing
+                .GetLastInvoiceNumberAsync(pointOfSale: 1, invoiceType: 11);
+            var nextNumber = lastNumber + 1;
+
+            // Create and authorize invoice
+            var request = new InvoiceRequest
+            {
+                PointOfSale = 1,
+                InvoiceType = 11, // Invoice C
+                Concept = 1, // Products
+                DocumentType = 96, // DNI
+                DocumentNumber = 12345678,
+                InvoiceNumberFrom = nextNumber,
+                InvoiceNumberTo = nextNumber,
+                InvoiceDate = DateTime.Today,
+                TotalAmount = 121.00m,
+                NetAmount = 100.00m,
+                VatAmount = 21.00m,
+                VatDetails = new List<VatDetail>
+                {
+                    new VatDetail
+                    {
+                        VatRateId = 5, // 21%
+                        BaseAmount = 100.00m,
+                        VatAmount = 21.00m
+                    }
+                }
+            };
+
+            var response = await _afipClient.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
+            
+            _logger.LogInformation("Invoice authorized successfully!");
+            _logger.LogInformation("CAE: {Cae}", response.Cae);
+            _logger.LogInformation("Expiration: {ExpirationDate}", response.CaeExpirationDate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing invoice");
+        }
+    }
+}
+```
+
+### Configuration with appsettings.json
+
+```json
+// appsettings.json
+{
+  "Afip": {
+    "Environment": "Testing",
+    "Cuit": "20123456789",
+    "CertificatePath": "certificates/testing.p12",
+    "CertificatePassword": "your-certificate-password",
+    "TimeoutSeconds": 30,
+    "EnableLogging": true
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Afip.Dotnet": "Debug"
+    }
+  }
+}
+```
+
+```csharp
+// Configuration binding
+services.AddAfipServices(config =>
+{
+    var afipSettings = builder.Configuration.GetSection("Afip");
+    config.Environment = Enum.Parse<AfipEnvironment>(afipSettings["Environment"]!);
+    config.Cuit = long.Parse(afipSettings["Cuit"]!);
+    config.CertificatePath = afipSettings["CertificatePath"]!;
+    config.CertificatePassword = afipSettings["CertificatePassword"]!;
+    config.TimeoutSeconds = afipSettings.GetValue<int>("TimeoutSeconds");
+    config.EnableLogging = afipSettings.GetValue<bool>("EnableLogging");
+});
+```
+
+### Advanced Scenarios
+
+#### Custom Service Registration
+
+```csharp
+// Register with custom lifetimes
+services.AddAfipServices(config => { /* configuration */ });
+
+// Override specific services if needed
+services.AddSingleton<IAfipClient, CustomAfipClient>();
+```
+
+#### Multiple AFIP Configurations
+
+```csharp
+// For applications handling multiple companies
+services.AddKeyedScoped<IAfipClient>("Company1", (provider, key) =>
+{
+    var config = new AfipConfiguration
+    {
+        Cuit = 20111111111,
+        CertificatePath = "certs/company1.p12",
+        // ... other settings
+    };
+    return new AfipClient(config, provider.GetService<ILoggerFactory>());
+});
+
+services.AddKeyedScoped<IAfipClient>("Company2", (provider, key) =>
+{
+    var config = new AfipConfiguration
+    {
+        Cuit = 20222222222,
+        CertificatePath = "certs/company2.p12",
+        // ... other settings
+    };
+    return new AfipClient(config, provider.GetService<ILoggerFactory>());
+});
+
+// Usage in controllers/services
+public class MultiCompanyInvoiceController : ControllerBase
+{
+    public async Task<IActionResult> AuthorizeForCompany1(
+        [FromKeyedServices("Company1")] IAfipClient afipClient,
+        [FromBody] InvoiceRequest request)
+    {
+        var response = await afipClient.ElectronicInvoicing.AuthorizeInvoiceAsync(request);
+        return Ok(response);
+    }
+}
+```
+
+## �🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
@@ -484,10 +911,37 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Related Links
 
-- [AFIP Documentation](https://www.afip.gob.ar/ws/)
+### Official AFIP Documentation
+- [AFIP Official Portal](https://www.afip.gob.ar/)
 - [ARCA Official Site](https://www.argentina.gob.ar/arca)
-- [Electronic Invoicing Regulations](https://www.afip.gob.ar/facturae/)
-- [WSFEv1 Specification](https://www.afip.gob.ar/ws/WSFE/WSFE-manual_desarrollador.pdf)
+- [Electronic Invoicing Main Page](https://www.afip.gob.ar/facturae/)
+- [Web Services Documentation](https://www.afip.gob.ar/ws/)
+
+### Technical Documentation
+- [WSFEv1 Developer Manual](https://www.afip.gob.ar/ws/WSFE/WSFE-manual_desarrollador.pdf)
+- [WSAA Authentication Manual](https://www.afip.gob.ar/ws/WSAA/wsaa_manual_desarrollador.pdf)
+- [Web Services Testing Environment](https://www.afip.gob.ar/ws/documentacion/manual_desarrollador_COMPG_v2_4.pdf)
+- [Electronic Invoicing Regulations](https://www.afip.gob.ar/fe/documentos/)
+
+### AFIP Regulations
+- [RG 2485/2008 - Electronic Invoicing Base](https://www.afip.gob.ar/fe/documentos/RG2485.pdf)
+- [RG 2904/2010 - Electronic Invoicing Implementation](https://www.afip.gob.ar/fe/documentos/RG2904.pdf)
+- [RG 3067/2011 - Electronic Invoicing Mandatory](https://www.afip.gob.ar/fe/documentos/RG3067.pdf)
+- [RG 3668/2014 - Special Regimes](https://www.afip.gob.ar/fe/documentos/RG3668.pdf)
+- [RG 3749/2015 - VAT Conditions](https://www.afip.gob.ar/fe/documentos/RG3749.pdf)
+- [RG 4367/2018 - FCE MiPyMEs](https://www.afip.gob.ar/fe/documentos/RG4367.pdf)
+- [RG 5616/2024 - Foreign Currency (FEv4)](https://www.afip.gob.ar/fe/documentos/RG5616.pdf)
+
+### Service URLs
+- **Testing WSAA**: `https://wsaahomo.afip.gov.ar/ws/services/LoginCms`
+- **Production WSAA**: `https://wsaa.afip.gov.ar/ws/services/LoginCms`
+- **Testing WSFEv1**: `https://wswhomo.afip.gov.ar/wsfev1/service.asmx`
+- **Production WSFEv1**: `https://servicios1.afip.gov.ar/wsfev1/service.asmx`
+
+### Certificate Management
+- [Digital Certificate Request](https://www.afip.gob.ar/ws/WSAA/certificados.asp)
+- [Certificate Installation Guide](https://www.afip.gob.ar/ws/documentacion/certificados.asp)
+- [Testing Environment Certificates](https://www.afip.gob.ar/ws/documentacion/certificados_testing.asp)
 
 ## ❓ FAQ
 
