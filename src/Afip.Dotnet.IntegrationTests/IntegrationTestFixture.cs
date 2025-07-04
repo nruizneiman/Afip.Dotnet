@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.DependencyInjection.Extensions;
@@ -19,11 +20,19 @@ namespace Afip.Dotnet.IntegrationTests
         public IServiceProvider ServiceProvider { get; private set; }
         public IAfipClient AfipClient { get; private set; }
         public AfipConfiguration Configuration { get; private set; }
+        public IWsaaService WsaaService { get; private set; }
+        public IAfipParametersService ParametersService { get; private set; }
+        public ILoggerFactory LoggerFactory { get; private set; }
         
         /// <summary>
         /// Indicates if the certificate is available for integration tests
         /// </summary>
         public bool IsCertificateAvailable => !string.IsNullOrEmpty(Configuration.CertificatePath) && File.Exists(Configuration.CertificatePath);
+        
+        /// <summary>
+        /// Indicates if the certificate is available for integration tests (alias for IsCertificateAvailable)
+        /// </summary>
+        public bool HasCertificate => IsCertificateAvailable;
         
         /// <summary>
         /// Indicates if the environment is suitable for testing
@@ -53,6 +62,9 @@ namespace Afip.Dotnet.IntegrationTests
 
                 ServiceProvider = services.BuildServiceProvider();
                 AfipClient = ServiceProvider.GetRequiredService<IAfipClient>();
+                WsaaService = ServiceProvider.GetRequiredService<IWsaaService>();
+                ParametersService = ServiceProvider.GetRequiredService<IAfipParametersService>();
+                LoggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
 
                 Console.WriteLine($"Integration test fixture initialized for environment: {Configuration.Environment}");
             }
@@ -61,6 +73,9 @@ namespace Afip.Dotnet.IntegrationTests
                 // Set to null when certificate is not available
                 ServiceProvider = null;
                 AfipClient = null;
+                WsaaService = null;
+                ParametersService = null;
+                LoggerFactory = null;
                 Console.WriteLine("Integration test fixture initialized without AFIP services (certificate not available)");
             }
         }

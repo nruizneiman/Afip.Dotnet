@@ -8,7 +8,7 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// <summary>
         /// VAT rate ID (3=0%, 4=10.5%, 5=21%, 6=27%, 8=5%, 9=2.5%)
         /// </summary>
-        public int VatRateId { get; set; }
+        public int VatId { get; set; }
         
         /// <summary>
         /// Base amount on which VAT is calculated
@@ -18,6 +18,6 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// <summary>
         /// VAT amount
         /// </summary>
-        public decimal VatAmount { get; set; }
+        public decimal Amount { get; set; }
     }
 }

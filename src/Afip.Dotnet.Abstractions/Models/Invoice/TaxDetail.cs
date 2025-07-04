@@ -8,7 +8,7 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// <summary>
         /// Tax type ID (1=National, 2=Provincial, 3=Municipal, 4=Internal, 99=Other)
         /// </summary>
-        public int TaxTypeId { get; set; }
+        public int TaxId { get; set; }
         
         /// <summary>
         /// Tax description
@@ -23,11 +23,11 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// <summary>
         /// Tax rate (percentage)
         /// </summary>
-        public decimal TaxRate { get; set; }
+        public decimal Rate { get; set; }
         
         /// <summary>
         /// Tax amount
         /// </summary>
-        public decimal TaxAmount { get; set; }
+        public decimal Amount { get; set; }
     }
 }

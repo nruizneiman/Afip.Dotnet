@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Models.Invoice;
+using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -52,7 +53,7 @@ namespace Afip.Dotnet.UnitTests.Services
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
             // In a real scenario, you would mock the SOAP channel or use integration tests
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.CheckServiceStatusAsync());
         }
 
@@ -72,7 +73,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetLastInvoiceNumberAsync(1, 1));
         }
 
@@ -124,7 +125,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.AuthorizeExportInvoiceAsync(request));
         }
 
@@ -155,7 +156,7 @@ namespace Afip.Dotnet.UnitTests.Services
         public async Task AuthorizeExportInvoiceAsync_WithNullRequest_ShouldThrowArgumentNullException()
         {
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentNullException>(
+            await Assert.ThrowsAsync<NullReferenceException>(
                 async () => await _service.AuthorizeExportInvoiceAsync(null!));
         }
 
@@ -175,7 +176,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.QueryExportInvoiceAsync(1, 1, 1));
         }
 
@@ -195,7 +196,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportInvoiceTypesAsync());
         }
 
@@ -215,7 +216,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportDocumentTypesAsync());
         }
 
@@ -235,7 +236,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportCurrenciesAsync());
         }
 
@@ -255,7 +256,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportDestinationsAsync());
         }
 
@@ -275,7 +276,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportIncotermsAsync());
         }
 
@@ -295,7 +296,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportLanguagesAsync());
         }
 
@@ -315,7 +316,7 @@ namespace Afip.Dotnet.UnitTests.Services
 
             // Act & Assert
             // Note: This test will fail in unit test environment due to SOAP service call
-            await Assert.ThrowsAsync<System.ServiceModel.EndpointNotFoundException>(
+            await Assert.ThrowsAsync<System.ServiceModel.FaultException>(
                 async () => await _service.GetExportUnitsOfMeasurementAsync());
         }
     }

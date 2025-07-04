@@ -39,10 +39,10 @@ namespace Afip.Dotnet
                 new Wsfev1Service(_configuration, Authentication, null));
 
             _exportInvoicingService = new Lazy<IWsfexService>(() => 
-                new WsfexService(Authentication, Parameters, _logger, _configuration));
+                new WsfexService(Authentication, Parameters, null, _configuration));
 
             _detailedInvoicingService = new Lazy<IWsmtxcaService>(() => 
-                new WsmtxcaService(Authentication, Parameters, _logger, _configuration));
+                new WsmtxcaService(Authentication, Parameters, null, _configuration));
 
             _parametersService = new Lazy<IAfipParametersService>(() => 
                 new AfipParametersService(_configuration, Authentication, null));

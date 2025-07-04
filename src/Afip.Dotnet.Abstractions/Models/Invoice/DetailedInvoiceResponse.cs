@@ -9,14 +9,14 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
     public class DetailedInvoiceResponse
     {
         /// <summary>
-        /// CAE (Authorization Code)
+        /// CAE (Electronic Authorization Code)
         /// </summary>
-        public string Cae { get; set; } = string.Empty;
+        public string? CAE { get; set; }
 
         /// <summary>
         /// CAE expiration date
         /// </summary>
-        public DateTime CaeExpirationDate { get; set; }
+        public DateTime? CAEExpirationDate { get; set; }
 
         /// <summary>
         /// Invoice number
@@ -97,5 +97,15 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// Processing observations
         /// </summary>
         public List<string> ProcessingObservations { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Result (A, R, O, etc)
+        /// </summary>
+        public string? Result { get; set; }
+
+        /// <summary>
+        /// Observations
+        /// </summary>
+        public List<Observation> Observations { get; set; } = new List<Observation>();
     }
 } 

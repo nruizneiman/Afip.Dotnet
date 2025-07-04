@@ -196,9 +196,9 @@ namespace Afip.Dotnet.IntegrationTests
                 {
                     new VatDetail
                     {
-                        VatRateId = 5, // 21%
+                        VatId = 5, // 21%
                         BaseAmount = 100.00m,
-                        VatAmount = 21.00m
+                        Amount = 21.00m
                     }
                 }
             };

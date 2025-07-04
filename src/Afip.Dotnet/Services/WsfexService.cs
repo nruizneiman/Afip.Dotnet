@@ -7,6 +7,7 @@ using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Models.Invoice;
 using Afip.Dotnet.Abstractions.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Afip.Dotnet.Services
 {

@@ -217,17 +217,17 @@ namespace Afip.Dotnet.Services
                         FchVtoPago = request.PaymentDueDate?.ToString("yyyyMMdd"),
                         Iva = request.VatDetails?.Select(v => new AlicIva
                         {
-                            Id = GetVatId(v.VatRateId),
+                            Id = GetVatId(v.VatId),
                             BaseImp = v.BaseAmount,
-                            Importe = v.VatAmount
+                            Importe = v.Amount
                         }).ToArray(),
                         Tributos = request.TaxDetails?.Select(t => new Tributo
                         {
-                            Id = t.TaxTypeId,
+                            Id = t.TaxId,
                             Desc = t.Description,
                             BaseImp = t.BaseAmount,
-                            Alic = t.TaxRate,
-                            Importe = t.TaxAmount
+                            Alic = t.Rate,
+                            Importe = t.Amount
                         }).ToArray(),
                         CbtesAsoc = request.AssociatedInvoices?.Select(a => new CbteAsoc
                         {

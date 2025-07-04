@@ -198,7 +198,12 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// <summary>
         /// Tax type code
         /// </summary>
-        public int TaxType { get; set; }
+        public int TaxId { get; set; }
+
+        /// <summary>
+        /// Tax description
+        /// </summary>
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Tax rate
@@ -225,6 +230,11 @@ namespace Afip.Dotnet.Abstractions.Models.Invoice
         /// Discount type code
         /// </summary>
         public int DiscountType { get; set; }
+
+        /// <summary>
+        /// Discount description
+        /// </summary>
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Discount rate

@@ -152,9 +152,9 @@ namespace BasicUsage
                     {
                         new VatDetail
                         {
-                            VatRateId = 5, // 21%
+                            VatId = 5, // 21%
                             BaseAmount = 100.00m,
-                            VatAmount = 21.00m
+                            Amount = 21.00m
                         }
                     }
                 };
@@ -256,9 +256,9 @@ namespace BasicUsage
                         {
                             new VatDetail
                             {
-                                VatRateId = 5, // 21%
+                                VatId = 5, // 21%
                                 BaseAmount = (100 + (i * 50)) / 1.21m,
-                                VatAmount = (100 + (i * 50)) - ((100 + (i * 50)) / 1.21m)
+                                Amount = (100 + (i * 50)) - ((100 + (i * 50)) / 1.21m)
                             }
                         }
                     };

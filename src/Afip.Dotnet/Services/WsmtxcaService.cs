@@ -7,6 +7,7 @@ using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Models.Invoice;
 using Afip.Dotnet.Abstractions.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Afip.Dotnet.Services
 {
@@ -433,6 +434,74 @@ namespace Afip.Dotnet.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting tax types");
+                throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<List<ParameterItem>> GetItemCategoriesAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _logger.LogInformation("Getting item categories");
+
+                var authTicket = await _wsaaService.GetValidTicketAsync("wsmtxca", cancellationToken);
+                var channel = CreateServiceChannel();
+
+                var authInfo = new MTXCAuthRequest
+                {
+                    Token = authTicket.Token,
+                    Sign = authTicket.Sign,
+                    Cuit = _configuration.Cuit
+                };
+
+                var response = await Task.Run(() => channel.FEXGetPARAM_Tipo_Concepto(authInfo), cancellationToken);
+
+                if (response.Errors != null && response.Errors.Length > 0)
+                {
+                    var error = response.Errors[0];
+                    throw new AfipException($"WSMTXCA parameter error: {error.Msg} (Code: {error.Code})");
+                }
+
+                return MapToParameterItems(response.ResultGet);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting item categories");
+                throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<List<ParameterItem>> GetDiscountTypesAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _logger.LogInformation("Getting discount types");
+
+                var authTicket = await _wsaaService.GetValidTicketAsync("wsmtxca", cancellationToken);
+                var channel = CreateServiceChannel();
+
+                var authInfo = new MTXCAuthRequest
+                {
+                    Token = authTicket.Token,
+                    Sign = authTicket.Sign,
+                    Cuit = _configuration.Cuit
+                };
+
+                var response = await Task.Run(() => channel.FEXGetPARAM_Tipo_Concepto(authInfo), cancellationToken);
+
+                if (response.Errors != null && response.Errors.Length > 0)
+                {
+                    var error = response.Errors[0];
+                    throw new AfipException($"WSMTXCA parameter error: {error.Msg} (Code: {error.Code})");
+                }
+
+                return MapToParameterItems(response.ResultGet);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting discount types");
                 throw;
             }
         }

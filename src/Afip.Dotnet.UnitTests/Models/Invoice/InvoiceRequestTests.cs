@@ -56,12 +56,12 @@ namespace Afip.Dotnet.UnitTests.Models.Invoice
 
             var vatDetails = new List<VatDetail>
             {
-                new VatDetail { VatRateId = 5, BaseAmount = 100m, VatAmount = 21m }
+                new VatDetail { VatId = 5, BaseAmount = 100m, Amount = 21m }
             };
 
             var taxDetails = new List<TaxDetail>
             {
-                new TaxDetail { TaxTypeId = 1, Description = "Test Tax", BaseAmount = 100m, TaxRate = 5m, TaxAmount = 5m }
+                new TaxDetail { TaxId = 1, Description = "Test Tax", BaseAmount = 100m, Rate = 5m, Amount = 5m }
             };
 
             var associatedInvoices = new List<AssociatedInvoice>
@@ -188,8 +188,8 @@ namespace Afip.Dotnet.UnitTests.Models.Invoice
         {
             // Arrange
             var request = new InvoiceRequest();
-            var vatDetail1 = new VatDetail { VatRateId = 5, BaseAmount = 100m, VatAmount = 21m };
-            var vatDetail2 = new VatDetail { VatRateId = 3, BaseAmount = 50m, VatAmount = 0m };
+            var vatDetail1 = new VatDetail { VatId = 5, BaseAmount = 100m, Amount = 21m };
+            var vatDetail2 = new VatDetail { VatId = 3, BaseAmount = 50m, Amount = 0m };
 
             // Act
             request.VatDetails.Add(vatDetail1);

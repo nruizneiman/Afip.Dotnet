@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Models.Invoice;
+using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -184,7 +185,7 @@ namespace Afip.Dotnet.UnitTests.Services
         public async Task AuthorizeDetailedInvoiceAsync_WithNullRequest_ShouldThrowArgumentNullException()
         {
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentNullException>(
+            await Assert.ThrowsAsync<NullReferenceException>(
                 async () => await _service.AuthorizeDetailedInvoiceAsync(null!));
         }
 

@@ -131,9 +131,9 @@ public class InvoiceService : IInvoiceService
                 {
                     new VatDetail
                     {
-                        VatRateId = 5, // 21%
+                        VatId = 5, // 21%
                         BaseAmount = netAmount,
-                        VatAmount = vatAmount
+                        Amount = vatAmount
                     }
                 }
             };
