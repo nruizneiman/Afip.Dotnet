@@ -7,6 +7,7 @@ using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.DependencyInjection.Extensions;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Afip.Dotnet.IntegrationTests
 {
@@ -30,6 +31,9 @@ namespace Afip.Dotnet.IntegrationTests
 
             // Create AFIP configuration
             Configuration = CreateAfipConfiguration(configuration);
+
+            // Skip if certificate is not available
+            SkipIfCertificateNotAvailable();
 
             // Build service provider
             var services = new ServiceCollection();
@@ -89,9 +93,8 @@ namespace Afip.Dotnet.IntegrationTests
 
                 if (string.IsNullOrEmpty(afipConfig.CertificatePath))
                 {
-                    throw new InvalidOperationException(
-                        "No certificate file found. Please provide a valid certificate path in configuration or " +
-                        "place a test certificate at one of these locations: " + string.Join(", ", testCertPaths));
+                    // Don't throw exception - let SkipIfCertificateNotAvailable handle it
+                    afipConfig.CertificatePath = null;
                 }
             }
 
@@ -119,7 +122,7 @@ namespace Afip.Dotnet.IntegrationTests
         {
             if (string.IsNullOrEmpty(Configuration.CertificatePath) || !File.Exists(Configuration.CertificatePath))
             {
-                throw new SkipException("Certificate file not available for integration tests");
+                throw new Xunit.Sdk.SkipException("Certificate file not available for integration tests");
             }
         }
 
@@ -130,7 +133,7 @@ namespace Afip.Dotnet.IntegrationTests
         {
             if (Configuration.Environment != AfipEnvironment.Testing)
             {
-                throw new SkipException("Test requires AFIP testing environment");
+                throw new Xunit.Sdk.SkipException("Test requires AFIP testing environment");
             }
         }
 
@@ -141,14 +144,6 @@ namespace Afip.Dotnet.IntegrationTests
                 disposableServiceProvider.Dispose();
             }
         }
-    }
-
-    /// <summary>
-    /// Exception thrown to skip a test
-    /// </summary>
-    public class SkipException : Exception
-    {
-        public SkipException(string message) : base(message) { }
     }
 
     /// <summary>

@@ -5,6 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Afip.Dotnet.DependencyInjection.Extensions;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Services;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
+using Afip.Dotnet.Services;
 
 namespace Afip.Dotnet.DependencyInjection.Tests.Extensions
 {
@@ -15,6 +18,8 @@ namespace Afip.Dotnet.DependencyInjection.Tests.Extensions
         public ServiceCollectionExtensionsTests()
         {
             _services = new ServiceCollection();
+            // Register a NullLogger for AfipSimpleConnectionPool
+            _services.AddSingleton<ILogger<AfipSimpleConnectionPool>>(NullLogger<AfipSimpleConnectionPool>.Instance);
         }
 
         [Fact]
@@ -265,8 +270,15 @@ namespace Afip.Dotnet.DependencyInjection.Tests.Extensions
 
         private static string CreateTempCertificateFile()
         {
-            var tempFile = Path.GetTempFileName();
-            File.WriteAllText(tempFile, "dummy certificate content");
+            var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".p12");
+            // Generate a minimal valid PKCS#12 file (self-signed, empty password)
+            using (var ecdsa = System.Security.Cryptography.ECDsa.Create())
+            {
+                var req = new System.Security.Cryptography.X509Certificates.CertificateRequest(
+                    "CN=DummyCert", ecdsa, System.Security.Cryptography.HashAlgorithmName.SHA256);
+                var cert = req.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddDays(1));
+                File.WriteAllBytes(tempFile, cert.Export(System.Security.Cryptography.X509Certificates.X509ContentType.Pkcs12, "test-password"));
+            }
             return tempFile;
         }
     }
