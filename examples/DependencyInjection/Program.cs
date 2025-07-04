@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Models.Invoice;
@@ -71,8 +71,8 @@ class Program
 public interface IInvoiceService
 {
     Task<InvoiceResponse> CreateInvoiceAsync(decimal amount, string customerDocument);
-    Task<int> GetNextInvoiceNumberAsync();
-    Task<InvoiceResponse?> GetInvoiceAsync(int pointOfSale, int invoiceType, int invoiceNumber);
+    Task<long> GetNextInvoiceNumberAsync();
+    Task<InvoiceResponse?> GetInvoiceAsync(int pointOfSale, int invoiceType, long invoiceNumber);
 }
 
 /// <summary>
@@ -153,7 +153,7 @@ public class InvoiceService : IInvoiceService
         }
     }
 
-    public async Task<int> GetNextInvoiceNumberAsync()
+    public async Task<long> GetNextInvoiceNumberAsync()
     {
         var lastNumber = await _afipClient.ElectronicInvoicing
             .GetLastInvoiceNumberAsync(pointOfSale: 1, invoiceType: 11);
@@ -161,12 +161,12 @@ public class InvoiceService : IInvoiceService
         return lastNumber + 1;
     }
 
-    public async Task<InvoiceResponse?> GetInvoiceAsync(int pointOfSale, int invoiceType, int invoiceNumber)
+    public async Task<InvoiceResponse?> GetInvoiceAsync(int pointOfSale, int invoiceType, long invoiceNumber)
     {
         try
         {
             return await _afipClient.ElectronicInvoicing
-                .GetInvoiceAsync(pointOfSale, invoiceType, invoiceNumber);
+                .QueryInvoiceAsync(pointOfSale, invoiceType, invoiceNumber);
         }
         catch (AfipException ex) when (ex.Message.Contains("not found"))
         {
@@ -197,12 +197,12 @@ public class ParameterService : IParameterService
 
         try
         {
-            var status = await _afipClient.ElectronicInvoicing.GetServiceStatusAsync();
+            var status = await _afipClient.ElectronicInvoicing.CheckServiceStatusAsync();
             
             Console.WriteLine("\n=== AFIP Service Status ===");
-            Console.WriteLine($"Application: {status.Application}");
-            Console.WriteLine($"Authentication: {status.Authentication}");
-            Console.WriteLine($"Database: {status.Database}");
+            Console.WriteLine($"Application: {status.AppServer}");
+            Console.WriteLine($"Authentication: {status.AuthServer}");
+            Console.WriteLine($"Database: {status.DbServer}");
         }
         catch (Exception ex)
         {

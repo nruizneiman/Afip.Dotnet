@@ -178,7 +178,7 @@ namespace Afip.Dotnet.Services
                 MaxReceivedMessageSize = 1024 * 1024 // 1MB
             };
 
-            var endpoint = new EndpointAddress(_configuration.Wsfev1Url);
+            var endpoint = new EndpointAddress(_configuration.GetWsfev1Url());
             var factory = new ChannelFactory<IWsfev1ServiceChannel>(binding, endpoint);
 
             return factory.CreateChannel();
@@ -254,16 +254,20 @@ namespace Afip.Dotnet.Services
                 PointOfSale = originalRequest.PointOfSale,
                 InvoiceType = originalRequest.InvoiceType,
                 InvoiceNumber = originalRequest.InvoiceNumberFrom,
-                AuthorizationCode = detail?.CAE,
+                AuthorizationCode = detail?.CAE ?? string.Empty,
+                Cae = detail?.CAE ?? string.Empty,
                 AuthorizationExpirationDate = DateTime.TryParseExact(detail?.CAEFchVto, "yyyyMMdd", null, 
                     System.Globalization.DateTimeStyles.None, out var expDate) ? expDate : (DateTime?)null,
-                Result = detail?.Resultado,
+                CaeExpirationDate = DateTime.TryParseExact(detail?.CAEFchVto, "yyyyMMdd", null, 
+                    System.Globalization.DateTimeStyles.None, out var expDate2) ? expDate2 : (DateTime?)null,
+                Result = detail?.Resultado ?? string.Empty,
                 ProcessedDate = DateTime.UtcNow,
-                Observations = detail?.Observaciones?.Select(o => new InvoiceObservation
+                ProcessingDate = DateTime.UtcNow,
+                Observations = detail?.Observaciones?.Select(o => new AfipObservation
                 {
                     Code = o.Code,
                     Message = o.Msg
-                }).ToList() ?? new List<InvoiceObservation>(),
+                }).ToList() ?? new List<AfipObservation>(),
                 Errors = response?.Errors?.Select(e => new InvoiceError
                 {
                     Code = e.Code,

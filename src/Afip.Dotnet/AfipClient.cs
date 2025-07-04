@@ -31,13 +31,13 @@ namespace Afip.Dotnet
 
             // Initialize services lazily
             _authenticationService = new Lazy<IWsaaService>(() => 
-                new WsaaService(_configuration, _logger?.CreateLogger<WsaaService>()));
+                new WsaaService(_configuration, null));
 
             _electronicInvoicingService = new Lazy<IWsfev1Service>(() => 
-                new Wsfev1Service(_configuration, Authentication, _logger?.CreateLogger<Wsfev1Service>()));
+                new Wsfev1Service(_configuration, Authentication, null));
 
             _parametersService = new Lazy<IAfipParametersService>(() => 
-                new AfipParametersService(_configuration, Authentication, _logger?.CreateLogger<AfipParametersService>()));
+                new AfipParametersService(_configuration, Authentication, null));
 
             _logger?.LogInformation("AfipClient initialized for CUIT {Cuit} in {Environment} environment", 
                 _configuration.Cuit, _configuration.Environment);

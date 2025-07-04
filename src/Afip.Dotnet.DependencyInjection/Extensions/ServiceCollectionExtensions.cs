@@ -5,7 +5,7 @@ using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.Services;
 using System;
 
-namespace Afip.Dotnet.Extensions
+namespace Afip.Dotnet.DependencyInjection.Extensions
 {
     /// <summary>
     /// Extension methods for registering AFIP services in the dependency injection container
@@ -41,15 +41,13 @@ namespace Afip.Dotnet.Extensions
             // Add memory caching if enabled
             if (enableCaching)
             {
-                services.AddMemoryCache();
-                services.AddScoped<IAfipCacheService, AfipMemoryCacheService>();
+                services.AddScoped<IAfipCacheService, AfipSimpleCacheService>();
             }
 
-            // Add HTTP client factory and connection pooling if enabled
+            // Add connection pooling if enabled
             if (enableConnectionPooling)
             {
-                services.AddHttpClient();
-                services.AddScoped<IAfipConnectionPool, AfipConnectionPool>();
+                services.AddScoped<IAfipConnectionPool, AfipSimpleConnectionPool>();
             }
 
             // Register core services
@@ -169,4 +167,4 @@ namespace Afip.Dotnet.Extensions
             return services.AddAfipServices(configuration, enableCaching: false, enableConnectionPooling: false);
         }
     }
-}
+} 

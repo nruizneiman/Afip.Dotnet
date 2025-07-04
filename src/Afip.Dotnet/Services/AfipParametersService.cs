@@ -278,7 +278,7 @@ namespace Afip.Dotnet.Services
                 MaxReceivedMessageSize = 1024 * 1024 // 1MB
             };
 
-            var endpoint = new EndpointAddress(_configuration.Wsfev1Url);
+            var endpoint = new EndpointAddress(_configuration.GetWsfev1Url());
             var factory = new ChannelFactory<IWsfev1ParametersServiceChannel>(binding, endpoint);
 
             return factory.CreateChannel();

@@ -141,7 +141,7 @@ namespace Afip.Dotnet.Services
                 MaxReceivedMessageSize = 1024 * 1024 // 1MB
             };
 
-            var endpoint = new EndpointAddress(_configuration.WsaaUrl);
+            var endpoint = new EndpointAddress(_configuration.GetWsaaUrl());
             var factory = new ChannelFactory<IWsaaServiceChannel>(binding, endpoint);
 
             try

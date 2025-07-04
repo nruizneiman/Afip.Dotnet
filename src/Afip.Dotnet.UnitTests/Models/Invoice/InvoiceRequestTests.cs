@@ -66,12 +66,12 @@ namespace Afip.Dotnet.UnitTests.Models.Invoice
 
             var associatedInvoices = new List<AssociatedInvoice>
             {
-                new AssociatedInvoice { InvoiceType = 1, PointOfSale = 1, InvoiceNumber = 123 }
+                new AssociatedInvoice { InvoiceType = 1, PointOfSale = 1, InvoiceNumber = 123L }
             };
 
             var optionalData = new List<OptionalData>
             {
-                new OptionalData { Id = "01", Value = "Test Value" }
+                new OptionalData { Id = 1, Value = "Test Value" }
             };
 
             // Act

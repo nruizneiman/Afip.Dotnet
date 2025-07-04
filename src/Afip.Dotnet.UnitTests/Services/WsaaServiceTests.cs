@@ -84,126 +84,6 @@ namespace Afip.Dotnet.UnitTests.Services
                 service.GetValidTicketAsync("", CancellationToken.None));
         }
 
-        [Fact]
-        public async Task RefreshTicketAsync_WithValidService_ShouldNotThrow()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-
-            // Act & Assert
-            // Note: This test would need mocking of HTTP calls to fully work
-            await Assert.ThrowsAnyAsync<Exception>(() => 
-                service.RefreshTicketAsync("wsfe", CancellationToken.None));
-        }
-
-        [Fact]
-        public async Task RefreshTicketAsync_WithNullService_ShouldThrowArgumentException()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                service.RefreshTicketAsync(null!, CancellationToken.None));
-        }
-
-        [Fact]
-        public void ValidateTicket_WithValidTicket_ShouldReturnTrue()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-            var validTicket = new AfipAuthTicket
-            {
-                Token = "valid_token",
-                Sign = "valid_sign",
-                ExpiresAt = DateTime.UtcNow.AddHours(1),
-                Service = "wsfe"
-            };
-
-            // Act
-            var result = service.ValidateTicket(validTicket);
-
-            // Assert
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void ValidateTicket_WithExpiredTicket_ShouldReturnFalse()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-            var expiredTicket = new AfipAuthTicket
-            {
-                Token = "valid_token",
-                Sign = "valid_sign",
-                ExpiresAt = DateTime.UtcNow.AddHours(-1),
-                Service = "wsfe"
-            };
-
-            // Act
-            var result = service.ValidateTicket(expiredTicket);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void ValidateTicket_WithNullTicket_ShouldReturnFalse()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-
-            // Act
-            var result = service.ValidateTicket(null);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Theory]
-        [InlineData("", "valid_sign")]
-        [InlineData("valid_token", "")]
-        [InlineData("", "")]
-        public void ValidateTicket_WithInvalidTokenOrSign_ShouldReturnFalse(string token, string sign)
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-            var invalidTicket = new AfipAuthTicket
-            {
-                Token = token,
-                Sign = sign,
-                ExpiresAt = DateTime.UtcNow.AddHours(1),
-                Service = "wsfe"
-            };
-
-            // Act
-            var result = service.ValidateTicket(invalidTicket);
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void Dispose_ShouldNotThrow()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-
-            // Act & Assert (should not throw)
-            service.Dispose();
-        }
-
-        [Fact]
-        public void MultipleDispose_ShouldNotThrow()
-        {
-            // Arrange
-            var service = new WsaaService(_testConfiguration, _mockLogger.Object);
-
-            // Act & Assert (should not throw)
-            service.Dispose();
-            service.Dispose();
-        }
-
         private AfipConfiguration CreateTestConfiguration()
         {
             return new AfipConfiguration
@@ -234,6 +114,23 @@ namespace Afip.Dotnet.UnitTests.Services
             };
         }
 
+        public Task<AfipAuthTicket> AuthenticateAsync(string serviceName, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(serviceName))
+                throw new ArgumentException("Service name is required", nameof(serviceName));
+
+            var ticket = new AfipAuthTicket
+            {
+                Token = _mockTicket.Token,
+                Sign = _mockTicket.Sign,
+                GeneratedAt = _mockTicket.GeneratedAt,
+                ExpiresAt = _mockTicket.ExpiresAt,
+                Service = serviceName
+            };
+
+            return Task.FromResult(ticket);
+        }
+
         public Task<AfipAuthTicket> GetValidTicketAsync(string serviceName, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(serviceName))
@@ -251,25 +148,9 @@ namespace Afip.Dotnet.UnitTests.Services
             return Task.FromResult(ticket);
         }
 
-        public Task RefreshTicketAsync(string serviceName, CancellationToken cancellationToken = default)
+        public void ClearTicketCache()
         {
-            if (string.IsNullOrEmpty(serviceName))
-                throw new ArgumentException("Service name is required", nameof(serviceName));
-
-            return Task.CompletedTask;
-        }
-
-        public bool ValidateTicket(AfipAuthTicket? ticket)
-        {
-            return ticket != null && 
-                   !string.IsNullOrEmpty(ticket.Token) && 
-                   !string.IsNullOrEmpty(ticket.Sign) && 
-                   ticket.ExpiresAt > DateTime.UtcNow;
-        }
-
-        public void Dispose()
-        {
-            // Mock disposal
+            // Mock cache clearing
         }
     }
 }

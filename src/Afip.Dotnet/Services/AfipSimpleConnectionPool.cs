@@ -8,18 +8,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Afip.Dotnet.Abstractions.Services;
 using Afip.Dotnet.Abstractions.Models;
-using System.Collections.Generic; // Added for List
-using System.Linq; // Added for Count
 
 namespace Afip.Dotnet.Services
 {
     /// <summary>
-    /// Connection pool implementation for AFIP HTTP clients with retry logic and health monitoring
+    /// Simple connection pool implementation for AFIP HTTP clients without external dependencies
     /// </summary>
-    public class AfipConnectionPool : IAfipConnectionPool
+    public class AfipSimpleConnectionPool : IAfipConnectionPool
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<AfipConnectionPool> _logger;
+        private readonly ILogger<AfipSimpleConnectionPool>? _logger;
         private readonly AfipConfiguration _configuration;
         private readonly ConcurrentDictionary<string, HttpClient> _clients;
         private readonly ConcurrentDictionary<string, ServiceStats> _serviceStats;
@@ -31,13 +28,11 @@ namespace Afip.Dotnet.Services
         private long _retriedRequests;
         private bool _disposed;
 
-        public AfipConnectionPool(
-            IHttpClientFactory httpClientFactory, 
-            ILogger<AfipConnectionPool> logger,
+        public AfipSimpleConnectionPool(
+            ILogger<AfipSimpleConnectionPool>? logger,
             AfipConfiguration configuration)
         {
-            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger;
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             
             _clients = new ConcurrentDictionary<string, HttpClient>();
@@ -63,7 +58,7 @@ namespace Afip.Dotnet.Services
             {
                 var client = CreateHttpClient(serviceName, baseUrl);
                 Interlocked.Increment(ref _totalConnectionsCreated);
-                _logger.LogDebug("Created new HTTP client for service: {ServiceName}, URL: {BaseUrl}", serviceName, baseUrl);
+                _logger?.LogDebug("Created new HTTP client for service: {ServiceName}, URL: {BaseUrl}", serviceName, baseUrl);
                 return client;
             });
         }
@@ -103,7 +98,7 @@ namespace Afip.Dotnet.Services
                     
                     if (response.IsSuccessStatusCode)
                     {
-                        _logger.LogDebug("Request successful for service: {ServiceName}, attempt: {Attempt}, duration: {Duration}ms", 
+                        _logger?.LogDebug("Request successful for service: {ServiceName}, attempt: {Attempt}, duration: {Duration}ms", 
                             serviceName, attempt + 1, stopwatch.ElapsedMilliseconds);
                         return response;
                     }
@@ -111,11 +106,11 @@ namespace Afip.Dotnet.Services
                     // Handle specific HTTP status codes
                     if (response.StatusCode == HttpStatusCode.ServiceUnavailable || 
                         response.StatusCode == HttpStatusCode.RequestTimeout ||
-                        response.StatusCode == HttpStatusCode.TooManyRequests)
+                        response.StatusCode == (HttpStatusCode)429)
                     {
                         if (attempt < maxRetries)
                         {
-                            _logger.LogWarning("Request failed with status {StatusCode} for service: {ServiceName}, retrying in {RetryDelay}ms", 
+                            _logger?.LogWarning("Request failed with status {StatusCode} for service: {ServiceName}, retrying in {RetryDelay}ms", 
                                 response.StatusCode, serviceName, retryDelay.TotalMilliseconds);
                             
                             response.Dispose();
@@ -130,7 +125,7 @@ namespace Afip.Dotnet.Services
                 }
                 catch (HttpRequestException ex) when (attempt < maxRetries)
                 {
-                    _logger.LogWarning(ex, "HTTP request failed for service: {ServiceName}, attempt: {Attempt}, retrying in {RetryDelay}ms", 
+                    _logger?.LogWarning(ex, "HTTP request failed for service: {ServiceName}, attempt: {Attempt}, retrying in {RetryDelay}ms", 
                         serviceName, attempt + 1, retryDelay.TotalMilliseconds);
                     
                     await Task.Delay(retryDelay, cancellationToken);
@@ -144,7 +139,7 @@ namespace Afip.Dotnet.Services
                     Interlocked.Increment(ref _failedRequests);
                     Interlocked.Increment(ref stats.FailedRequests);
                     
-                    _logger.LogError(ex, "Request timeout for service: {ServiceName}, attempt: {Attempt}", serviceName, attempt + 1);
+                    _logger?.LogError(ex, "Request timeout for service: {ServiceName}, attempt: {Attempt}", serviceName, attempt + 1);
                     
                     if (attempt < maxRetries)
                     {
@@ -162,7 +157,7 @@ namespace Afip.Dotnet.Services
                     Interlocked.Increment(ref _failedRequests);
                     Interlocked.Increment(ref stats.FailedRequests);
                     
-                    _logger.LogError(ex, "Request failed for service: {ServiceName}, attempt: {Attempt}", serviceName, attempt + 1);
+                    _logger?.LogError(ex, "Request failed for service: {ServiceName}, attempt: {Attempt}", serviceName, attempt + 1);
                     
                     if (attempt == maxRetries)
                     {
@@ -205,9 +200,9 @@ namespace Afip.Dotnet.Services
         {
             ThrowIfDisposed();
 
-            // In this implementation, we don't have explicit idle connection tracking
-            // This could be enhanced to track last usage time and dispose unused clients
-            _logger.LogDebug("Idle connection cleanup requested");
+            // In this simple implementation, we don't track idle connections
+            // so this method just returns immediately
+            _logger?.LogDebug("ClearIdleConnectionsAsync called - no idle connections to clear");
             return Task.CompletedTask;
         }
 
@@ -217,111 +212,59 @@ namespace Afip.Dotnet.Services
 
             var healthStatus = new PoolHealthStatus
             {
+                Status = HealthStatus.Healthy,
                 Timestamp = DateTimeOffset.UtcNow,
-                ServiceStatuses = new Dictionary<string, ServiceHealthStatus>()
+                ServiceStatuses = new System.Collections.Generic.Dictionary<string, ServiceHealthStatus>(),
+                Duration = TimeSpan.Zero,
+                Errors = new System.Collections.Generic.List<string>()
             };
 
-            var stopwatch = Stopwatch.StartNew();
-
-            try
+            // Check each service's health
+            foreach (var kvp in _serviceStats)
             {
-                var healthTasks = new List<Task>();
-
-                foreach (var kvp in _serviceStats)
+                var serviceName = kvp.Key;
+                var stats = kvp.Value;
+                
+                var serviceHealth = new ServiceHealthStatus
                 {
-                    var serviceName = kvp.Key;
-                    var stats = kvp.Value;
+                    ServiceName = serviceName,
+                    Status = HealthStatus.Healthy,
+                    ResponseTime = TimeSpan.FromMilliseconds(stats.TotalRequests > 0 ? stats.TotalResponseTimeMs / stats.TotalRequests : 0),
+                    ActiveConnections = 1 // Not tracked per service, so set to 1
+                };
 
-                    healthTasks.Add(CheckServiceHealthAsync(serviceName, stats, healthStatus, cancellationToken));
+                // Consider service unhealthy if failure rate is too high
+                if (stats.TotalRequests > 10 && (double)stats.FailedRequests / stats.TotalRequests > 0.5)
+                {
+                    serviceHealth.Status = HealthStatus.Unhealthy;
+                    healthStatus.Status = HealthStatus.Unhealthy;
+                    serviceHealth.ErrorMessage = "High failure rate";
                 }
 
-                await Task.WhenAll(healthTasks);
-
-                // Determine overall health
-                var healthyCount = healthStatus.ServiceStatuses.Count(s => s.Value.Status == HealthStatus.Healthy);
-                var degradedCount = healthStatus.ServiceStatuses.Count(s => s.Value.Status == HealthStatus.Degraded);
-                var unhealthyCount = healthStatus.ServiceStatuses.Count(s => s.Value.Status == HealthStatus.Unhealthy);
-
-                if (unhealthyCount > 0)
-                    healthStatus.Status = HealthStatus.Unhealthy;
-                else if (degradedCount > 0)
-                    healthStatus.Status = HealthStatus.Degraded;
-                else
-                    healthStatus.Status = HealthStatus.Healthy;
-            }
-            catch (Exception ex)
-            {
-                healthStatus.Status = HealthStatus.Unhealthy;
-                healthStatus.Errors.Add($"Health check failed: {ex.Message}");
-                _logger.LogError(ex, "Health check failed");
-            }
-            finally
-            {
-                stopwatch.Stop();
-                healthStatus.Duration = stopwatch.Elapsed;
+                healthStatus.ServiceStatuses[serviceName] = serviceHealth;
             }
 
             return healthStatus;
         }
 
-        private async Task CheckServiceHealthAsync(
-            string serviceName, 
-            ServiceStats stats, 
-            PoolHealthStatus healthStatus, 
-            CancellationToken cancellationToken)
-        {
-            var serviceHealth = new ServiceHealthStatus
-            {
-                ServiceName = serviceName,
-                ActiveConnections = 1 // We have one client per service in this implementation
-            };
-
-            var healthCheckStopwatch = Stopwatch.StartNew();
-
-            try
-            {
-                // Simple health check based on error rate and response times
-                var errorRate = stats.TotalRequests > 0 ? (double)stats.FailedRequests / stats.TotalRequests : 0;
-                var avgResponseTime = stats.TotalRequests > 0 ? stats.TotalResponseTimeMs / stats.TotalRequests : 0;
-
-                if (errorRate > 0.5) // More than 50% error rate
-                {
-                    serviceHealth.Status = HealthStatus.Unhealthy;
-                    serviceHealth.ErrorMessage = $"High error rate: {errorRate:P}";
-                }
-                else if (errorRate > 0.2 || avgResponseTime > 10000) // More than 20% error rate or avg > 10s
-                {
-                    serviceHealth.Status = HealthStatus.Degraded;
-                    serviceHealth.ErrorMessage = $"Degraded performance: {errorRate:P} error rate, {avgResponseTime:F0}ms avg response time";
-                }
-                else
-                {
-                    serviceHealth.Status = HealthStatus.Healthy;
-                }
-            }
-            catch (Exception ex)
-            {
-                serviceHealth.Status = HealthStatus.Unhealthy;
-                serviceHealth.ErrorMessage = ex.Message;
-            }
-            finally
-            {
-                healthCheckStopwatch.Stop();
-                serviceHealth.ResponseTime = healthCheckStopwatch.Elapsed;
-                healthStatus.ServiceStatuses[serviceName] = serviceHealth;
-            }
-        }
-
         private HttpClient CreateHttpClient(string serviceName, string baseUrl)
         {
-            var client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(baseUrl);
-            client.Timeout = TimeSpan.FromSeconds(_configuration.TimeoutSeconds);
-            
-            // Set common headers
-            client.DefaultRequestHeaders.Add("User-Agent", "Afip.Dotnet.SDK/1.0");
-            client.DefaultRequestHeaders.Add("Accept", "text/xml, application/soap+xml, application/xml");
-            
+            var handler = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+
+            var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(baseUrl),
+                Timeout = TimeSpan.FromSeconds(_configuration.TimeoutSeconds)
+            };
+
+            // Add default headers
+            client.DefaultRequestHeaders.Add("User-Agent", "Afip.Dotnet/1.0");
+            client.DefaultRequestHeaders.Add("Accept", "application/xml, text/xml, */*");
+            client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+
             return client;
         }
 
@@ -332,30 +275,28 @@ namespace Afip.Dotnet.Services
 
         private void UpdateResponseTimeStats(ServiceStats stats, long responseTimeMs)
         {
-            lock (stats)
-            {
-                stats.TotalResponseTimeMs += responseTimeMs;
-            }
+            stats.TotalResponseTimeMs += responseTimeMs;
         }
 
         private void CleanupIdleConnections(object? state)
         {
             try
             {
-                // This is a placeholder for more sophisticated idle connection cleanup
-                // In a real implementation, you might track last usage time and dispose unused clients
-                _logger.LogDebug("Periodic connection cleanup executed");
+                // In this simple implementation, we don't actually clean up connections
+                // as we want to keep them for reuse. This method is called by the timer
+                // but doesn't perform any cleanup.
+                _logger?.LogDebug("Cleanup timer triggered - no cleanup needed in simple implementation");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during connection cleanup");
+                _logger?.LogError(ex, "Error during connection cleanup");
             }
         }
 
         private void ThrowIfDisposed()
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(AfipConnectionPool));
+                throw new ObjectDisposedException(nameof(AfipSimpleConnectionPool));
         }
 
         public void Dispose()
@@ -371,9 +312,7 @@ namespace Afip.Dotnet.Services
                 
                 _clients.Clear();
                 _serviceStats.Clear();
-                
                 _disposed = true;
-                _logger.LogDebug("AfipConnectionPool disposed");
             }
         }
 
@@ -384,4 +323,4 @@ namespace Afip.Dotnet.Services
             public double TotalResponseTimeMs;
         }
     }
-}
+} 

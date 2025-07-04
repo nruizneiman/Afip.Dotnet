@@ -172,11 +172,11 @@ namespace Afip.Dotnet.IntegrationTests
             await cacheService.ClearAsync();
 
             // Act - Get authentication ticket
-            var ticket1 = await wsaaService.GetAuthTicketAsync("wsfe");
+            var ticket1 = await wsaaService.GetValidTicketAsync("wsfe");
             var stats1 = await cacheService.GetStatisticsAsync();
 
             // Get again immediately - should be cached
-            var ticket2 = await wsaaService.GetAuthTicketAsync("wsfe");
+            var ticket2 = await wsaaService.GetValidTicketAsync("wsfe");
             var stats2 = await cacheService.GetStatisticsAsync();
 
             // Assert

@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using Xunit;
 using Microsoft.Extensions.DependencyInjection;
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Services;
 
-namespace Afip.Dotnet.UnitTests.Extensions
+namespace Afip.Dotnet.DependencyInjection.Tests.Extensions
 {
     public class ServiceCollectionExtensionsTests
     {
@@ -192,6 +192,64 @@ namespace Afip.Dotnet.UnitTests.Extensions
             }
         }
 
+        [Fact]
+        public void AddAfipServices_WithCachingDisabled_ShouldNotRegisterCacheService()
+        {
+            // Arrange
+            var config = CreateValidConfiguration();
+
+            // Act
+            _services.AddAfipServices(config, enableCaching: false);
+            var serviceProvider = _services.BuildServiceProvider();
+
+            // Assert
+            Assert.Null(serviceProvider.GetService<IAfipCacheService>());
+        }
+
+        [Fact]
+        public void AddAfipServices_WithConnectionPoolingDisabled_ShouldNotRegisterConnectionPool()
+        {
+            // Arrange
+            var config = CreateValidConfiguration();
+
+            // Act
+            _services.AddAfipServices(config, enableConnectionPooling: false);
+            var serviceProvider = _services.BuildServiceProvider();
+
+            // Assert
+            Assert.Null(serviceProvider.GetService<IAfipConnectionPool>());
+        }
+
+        [Fact]
+        public void AddAfipServicesOptimized_ShouldEnableCachingAndConnectionPooling()
+        {
+            // Arrange
+            var config = CreateValidConfiguration();
+
+            // Act
+            _services.AddAfipServicesOptimized(config);
+            var serviceProvider = _services.BuildServiceProvider();
+
+            // Assert
+            Assert.NotNull(serviceProvider.GetService<IAfipCacheService>());
+            Assert.NotNull(serviceProvider.GetService<IAfipConnectionPool>());
+        }
+
+        [Fact]
+        public void AddAfipServicesMinimal_ShouldDisableCachingAndConnectionPooling()
+        {
+            // Arrange
+            var config = CreateValidConfiguration();
+
+            // Act
+            _services.AddAfipServicesMinimal(config);
+            var serviceProvider = _services.BuildServiceProvider();
+
+            // Assert
+            Assert.Null(serviceProvider.GetService<IAfipCacheService>());
+            Assert.Null(serviceProvider.GetService<IAfipConnectionPool>());
+        }
+
         private static AfipConfiguration CreateValidConfiguration()
         {
             return new AfipConfiguration
@@ -207,11 +265,9 @@ namespace Afip.Dotnet.UnitTests.Extensions
 
         private static string CreateTempCertificateFile()
         {
-            var tempPath = Path.GetTempFileName();
-            File.WriteAllBytes(tempPath, new byte[] { 0x30, 0x82 }); // Minimal PKCS#12 header
-            var certPath = Path.ChangeExtension(tempPath, ".p12");
-            File.Move(tempPath, certPath);
-            return certPath;
+            var tempFile = Path.GetTempFileName();
+            File.WriteAllText(tempFile, "dummy certificate content");
+            return tempFile;
         }
     }
-}
+} 

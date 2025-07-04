@@ -26,13 +26,13 @@ namespace Afip.Dotnet.UnitTests.Models
         [Theory]
         [InlineData(AfipEnvironment.Testing, "https://wsaahomo.afip.gov.ar/ws/services/LoginCms")]
         [InlineData(AfipEnvironment.Production, "https://wsaa.afip.gov.ar/ws/services/LoginCms")]
-        public void WsaaUrl_ShouldReturnCorrectUrlBasedOnEnvironment(AfipEnvironment environment, string expectedUrl)
+        public void GetWsaaUrl_ShouldReturnCorrectUrlBasedOnEnvironment(AfipEnvironment environment, string expectedUrl)
         {
             // Arrange
             var config = new AfipConfiguration { Environment = environment };
 
             // Act
-            var url = config.WsaaUrl;
+            var url = config.GetWsaaUrl();
 
             // Assert
             Assert.Equal(expectedUrl, url);
@@ -41,20 +41,20 @@ namespace Afip.Dotnet.UnitTests.Models
         [Theory]
         [InlineData(AfipEnvironment.Testing, "https://wswhomo.afip.gov.ar/wsfev1/service.asmx")]
         [InlineData(AfipEnvironment.Production, "https://servicios1.afip.gov.ar/wsfev1/service.asmx")]
-        public void Wsfev1Url_ShouldReturnCorrectUrlBasedOnEnvironment(AfipEnvironment environment, string expectedUrl)
+        public void GetWsfev1Url_ShouldReturnCorrectUrlBasedOnEnvironment(AfipEnvironment environment, string expectedUrl)
         {
             // Arrange
             var config = new AfipConfiguration { Environment = environment };
 
             // Act
-            var url = config.Wsfev1Url;
+            var url = config.GetWsfev1Url();
 
             // Assert
             Assert.Equal(expectedUrl, url);
         }
 
         [Fact]
-        public void WsaaUrl_WithCustomUrl_ShouldReturnCustomUrl()
+        public void GetWsaaUrl_WithCustomUrl_ShouldReturnCustomUrl()
         {
             // Arrange
             const string customUrl = "https://custom.wsaa.url";
@@ -65,14 +65,14 @@ namespace Afip.Dotnet.UnitTests.Models
             };
 
             // Act
-            var url = config.WsaaUrl;
+            var url = config.GetWsaaUrl();
 
             // Assert
             Assert.Equal(customUrl, url);
         }
 
         [Fact]
-        public void Wsfev1Url_WithCustomUrl_ShouldReturnCustomUrl()
+        public void GetWsfev1Url_WithCustomUrl_ShouldReturnCustomUrl()
         {
             // Arrange
             const string customUrl = "https://custom.wsfev1.url";
@@ -83,7 +83,7 @@ namespace Afip.Dotnet.UnitTests.Models
             };
 
             // Act
-            var url = config.Wsfev1Url;
+            var url = config.GetWsfev1Url();
 
             // Assert
             Assert.Equal(customUrl, url);

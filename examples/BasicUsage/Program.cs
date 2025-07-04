@@ -13,19 +13,13 @@ namespace BasicUsage
     {
         static async Task Main(string[] args)
         {
-            // Setup logging
-            using var loggerFactory = LoggerFactory.Create(builder =>
-                builder.AddConsole().SetMinimumLevel(LogLevel.Information));
-            var logger = loggerFactory.CreateLogger<AfipClient>();
-
             try
             {
                 // Configuration - Replace with your actual values
                 var client = AfipClient.CreateForTesting(
                     cuit: 20123456789,
                     certificatePath: "certificate.p12", // Path to your AFIP certificate
-                    certificatePassword: "your_password",
-                    logger: logger
+                    certificatePassword: "your_password"
                 );
 
                 // Test connection
@@ -158,7 +152,7 @@ namespace BasicUsage
                     {
                         new VatDetail
                         {
-                            VatRate = 21.0m,
+                            VatRateId = 5, // 21%
                             BaseAmount = 100.00m,
                             VatAmount = 21.00m
                         }
@@ -262,7 +256,7 @@ namespace BasicUsage
                         {
                             new VatDetail
                             {
-                                VatRate = 21.0m,
+                                VatRateId = 5, // 21%
                                 BaseAmount = (100 + (i * 50)) / 1.21m,
                                 VatAmount = (100 + (i * 50)) - ((100 + (i * 50)) / 1.21m)
                             }

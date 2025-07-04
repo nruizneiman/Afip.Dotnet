@@ -119,7 +119,7 @@ namespace Afip.Dotnet.Abstractions.Services
         /// <summary>
         /// Individual service health statuses
         /// </summary>
-        public Dictionary<string, ServiceHealthStatus> ServiceStatuses { get; set; } = new();
+        public Dictionary<string, ServiceHealthStatus> ServiceStatuses { get; set; } = new Dictionary<string, ServiceHealthStatus>();
 
         /// <summary>
         /// Health check duration
@@ -129,7 +129,7 @@ namespace Afip.Dotnet.Abstractions.Services
         /// <summary>
         /// Any health check errors
         /// </summary>
-        public List<string> Errors { get; set; } = new();
+        public List<string> Errors { get; set; } = new List<string>();
     }
 
     /// <summary>

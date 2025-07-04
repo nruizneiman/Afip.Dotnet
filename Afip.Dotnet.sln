@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.UnitTests", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.IntegrationTests", "src\Afip.Dotnet.IntegrationTests\Afip.Dotnet.IntegrationTests.csproj", "{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.DependencyInjection", "src\Afip.Dotnet.DependencyInjection\Afip.Dotnet.DependencyInjection.csproj", "{5E6F7890-ABCD-EF12-3456-7890ABCDEF13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Afip.Dotnet.DependencyInjection.Tests", "src\Afip.Dotnet.DependencyInjection.Tests\Afip.Dotnet.DependencyInjection.Tests.csproj", "{6E7F8901-BCDE-F234-5678-9012BCDEF234}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5E6F7890-ABCD-EF12-3456-7890ABCDEF12}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicUsage", "examples\BasicUsage\BasicUsage.csproj", "{6F789012-3456-789A-BCDE-F123456789AB}"
@@ -39,6 +43,14 @@ Global
 		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D5E6F78-90AB-CDEF-1234-567890ABCDEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E6F7890-ABCD-EF12-3456-7890ABCDEF13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E6F7890-ABCD-EF12-3456-7890ABCDEF13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E6F7890-ABCD-EF12-3456-7890ABCDEF13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E6F7890-ABCD-EF12-3456-7890ABCDEF13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E7F8901-BCDE-F234-5678-9012BCDEF234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E7F8901-BCDE-F234-5678-9012BCDEF234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E7F8901-BCDE-F234-5678-9012BCDEF234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E7F8901-BCDE-F234-5678-9012BCDEF234}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F789012-3456-789A-BCDE-F123456789AB}.Release|Any CPU.ActiveCfg = Release|Any CPU

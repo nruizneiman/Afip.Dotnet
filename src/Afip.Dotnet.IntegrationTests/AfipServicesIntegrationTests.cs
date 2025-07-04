@@ -32,11 +32,11 @@ namespace Afip.Dotnet.IntegrationTests
             var client = _fixture.AfipClient;
 
             // Act
-            var status = await client.ElectronicInvoicing.GetServiceStatusAsync();
+            var status = await client.ElectronicInvoicing.CheckServiceStatusAsync();
 
             // Assert
             status.Should().NotBeNull();
-            _output.WriteLine($"Service Status - App: {status.Application}, Auth: {status.Authentication}, DB: {status.Database}");
+            _output.WriteLine($"Service Status - App: {status.AppServer}, Auth: {status.AuthServer}, DB: {status.DbServer}");
         }
 
         [Fact]
@@ -49,7 +49,7 @@ namespace Afip.Dotnet.IntegrationTests
             var wsaaService = _fixture.ServiceProvider.GetRequiredService<IWsaaService>();
 
             // Act
-            var ticket = await wsaaService.GetAuthTicketAsync("wsfe");
+            var ticket = await wsaaService.GetValidTicketAsync("wsfe");
 
             // Assert
             ticket.Should().NotBeNull();
@@ -74,7 +74,7 @@ namespace Afip.Dotnet.IntegrationTests
             // Assert
             invoiceTypes.Should().NotBeNull();
             invoiceTypes.Should().NotBeEmpty();
-            invoiceTypes.Should().Contain(it => it.Id == 11); // Factura C should exist
+            invoiceTypes.Should().Contain(it => it.Id == "11"); // Factura C should exist
             _output.WriteLine($"Retrieved {invoiceTypes.Count} invoice types");
         }
 
@@ -93,8 +93,8 @@ namespace Afip.Dotnet.IntegrationTests
             // Assert
             documentTypes.Should().NotBeNull();
             documentTypes.Should().NotBeEmpty();
-            documentTypes.Should().Contain(dt => dt.Id == 80); // CUIT should exist
-            documentTypes.Should().Contain(dt => dt.Id == 96); // DNI should exist
+            documentTypes.Should().Contain(dt => dt.Id == "80"); // CUIT should exist
+            documentTypes.Should().Contain(dt => dt.Id == "96"); // DNI should exist
             _output.WriteLine($"Retrieved {documentTypes.Count} document types");
         }
 
@@ -113,7 +113,7 @@ namespace Afip.Dotnet.IntegrationTests
             // Assert
             vatRates.Should().NotBeNull();
             vatRates.Should().NotBeEmpty();
-            vatRates.Should().Contain(vr => vr.Id == 5); // 21% VAT should exist
+            vatRates.Should().Contain(vr => vr.Id == "5"); // 21% VAT should exist
             _output.WriteLine($"Retrieved {vatRates.Count} VAT rates");
         }
 
@@ -183,7 +183,7 @@ namespace Afip.Dotnet.IntegrationTests
             response.Cae.Should().NotBeNullOrEmpty();
             response.CaeExpirationDate.Should().BeAfter(DateTime.Today);
             response.InvoiceNumber.Should().Be(nextNumber);
-            response.IsApproved.Should().BeTrue();
+            response.IsSuccessful.Should().BeTrue();
 
             _output.WriteLine($"Invoice authorized successfully:");
             _output.WriteLine($"  CAE: {response.Cae}");
@@ -212,7 +212,7 @@ namespace Afip.Dotnet.IntegrationTests
             }
 
             // Act
-            var invoice = await client.ElectronicInvoicing.GetInvoiceAsync(pointOfSale, invoiceType, lastNumber);
+            var invoice = await client.ElectronicInvoicing.QueryInvoiceAsync(pointOfSale, invoiceType, lastNumber);
 
             // Assert
             if (invoice != null)
@@ -227,11 +227,10 @@ namespace Afip.Dotnet.IntegrationTests
                 _output.WriteLine($"  Type: {invoice.InvoiceType}");
                 _output.WriteLine($"  Number: {invoice.InvoiceNumber}");
                 _output.WriteLine($"  CAE: {invoice.Cae}");
-                _output.WriteLine($"  Total: ${invoice.TotalAmount:F2}");
             }
             else
             {
-                _output.WriteLine($"Invoice not found: POS {pointOfSale}, Type {invoiceType}, Number {lastNumber}");
+                _output.WriteLine("Invoice not found - this is acceptable for testing");
             }
         }
 
@@ -286,11 +285,11 @@ namespace Afip.Dotnet.IntegrationTests
             var wsaaService = _fixture.ServiceProvider.GetRequiredService<IWsaaService>();
 
             // Act - First call should create and cache the token
-            var ticket1 = await wsaaService.GetAuthTicketAsync("wsfe");
+            var ticket1 = await wsaaService.GetValidTicketAsync("wsfe");
             var stats1 = await cacheService.GetStatisticsAsync();
 
             // Second call should use cached token
-            var ticket2 = await wsaaService.GetAuthTicketAsync("wsfe");
+            var ticket2 = await wsaaService.GetValidTicketAsync("wsfe");
             var stats2 = await cacheService.GetStatisticsAsync();
 
             // Assert
@@ -323,7 +322,7 @@ namespace Afip.Dotnet.IntegrationTests
             var client = _fixture.AfipClient;
 
             // Act - Make several requests to populate statistics
-            await client.ElectronicInvoicing.GetServiceStatusAsync();
+            await client.ElectronicInvoicing.CheckServiceStatusAsync();
             await client.Parameters.GetInvoiceTypesAsync();
             await client.Parameters.GetDocumentTypesAsync();
 
@@ -357,7 +356,7 @@ namespace Afip.Dotnet.IntegrationTests
 
             // Make some requests first to populate health data
             var client = _fixture.AfipClient;
-            await client.ElectronicInvoicing.GetServiceStatusAsync();
+            await client.ElectronicInvoicing.CheckServiceStatusAsync();
 
             // Act
             var healthStatus = await connectionPool.CheckHealthAsync();

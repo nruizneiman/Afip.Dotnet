@@ -3,10 +3,9 @@ using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Afip.Dotnet.Abstractions.Models;
 using Afip.Dotnet.Abstractions.Services;
-using Afip.Dotnet.Extensions;
+using Afip.Dotnet.DependencyInjection.Extensions;
 using Xunit;
 
 namespace Afip.Dotnet.IntegrationTests
@@ -19,7 +18,6 @@ namespace Afip.Dotnet.IntegrationTests
         public IServiceProvider ServiceProvider { get; private set; }
         public IAfipClient AfipClient { get; private set; }
         public AfipConfiguration Configuration { get; private set; }
-        public ILogger<IntegrationTestFixture> Logger { get; private set; }
 
         public IntegrationTestFixture()
         {
@@ -35,22 +33,14 @@ namespace Afip.Dotnet.IntegrationTests
 
             // Build service provider
             var services = new ServiceCollection();
-            
-            // Add logging
-            services.AddLogging(builder =>
-            {
-                builder.AddConsole();
-                builder.SetMinimumLevel(LogLevel.Debug);
-            });
 
             // Add AFIP services with all optimizations
             services.AddAfipServicesOptimized(Configuration);
 
             ServiceProvider = services.BuildServiceProvider();
-            Logger = ServiceProvider.GetRequiredService<ILogger<IntegrationTestFixture>>();
             AfipClient = ServiceProvider.GetRequiredService<IAfipClient>();
 
-            Logger.LogInformation("Integration test fixture initialized for environment: {Environment}", Configuration.Environment);
+            Console.WriteLine($"Integration test fixture initialized for environment: {Configuration.Environment}");
         }
 
         private AfipConfiguration CreateAfipConfiguration(IConfiguration configuration)
