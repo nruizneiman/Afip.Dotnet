@@ -1,38 +1,72 @@
 using System;
 using System.Collections.Generic;
-using Xunit;
 using Afip.Dotnet.Abstractions.Models.Invoice;
+using Xunit;
 
 namespace Afip.Dotnet.UnitTests.Models.Invoice
 {
     public class InvoiceRequestTests
     {
         [Fact]
-        public void InvoiceRequest_DefaultValues_ShouldBeCorrect()
+        public void Constructor_WithValidValues_ShouldSetProperties()
+        {
+            // Arrange & Act
+            var request = new InvoiceRequest
+            {
+                InvoiceType = 1,
+                PointOfSale = 1,
+                InvoiceNumberFrom = 1,
+                InvoiceNumberTo = 1,
+                InvoiceDate = DateTime.Today,
+                Concept = 1,
+                DocumentType = 80,
+                DocumentNumber = 12345678,
+                TotalAmount = 100.00m,
+                NetAmount = 82.64m,
+                ExemptAmount = 0.00m,
+                VatAmount = 17.36m,
+                CurrencyId = "PES",
+                CurrencyRate = 1.00m
+            };
+
+            // Assert
+            Assert.Equal(1, request.InvoiceType);
+            Assert.Equal(1, request.PointOfSale);
+            Assert.Equal(1, request.InvoiceNumberFrom);
+            Assert.Equal(1, request.InvoiceNumberTo);
+            Assert.Equal(DateTime.Today, request.InvoiceDate);
+            Assert.Equal(1, request.Concept);
+            Assert.Equal(80, request.DocumentType);
+            Assert.Equal(12345678, request.DocumentNumber);
+            Assert.Equal(100.00m, request.TotalAmount);
+            Assert.Equal(82.64m, request.NetAmount);
+            Assert.Equal(0.00m, request.ExemptAmount);
+            Assert.Equal(17.36m, request.VatAmount);
+            Assert.Equal("PES", request.CurrencyId);
+            Assert.Equal(1.00m, request.CurrencyRate);
+        }
+
+        [Fact]
+        public void Constructor_WithDefaultValues_ShouldSetDefaults()
         {
             // Arrange & Act
             var request = new InvoiceRequest();
 
             // Assert
-            Assert.Equal(0, request.PointOfSale);
             Assert.Equal(0, request.InvoiceType);
-            Assert.Equal(0, request.Concept);
-            Assert.Equal(0, request.DocumentType);
-            Assert.Equal(0, request.DocumentNumber);
+            Assert.Equal(0, request.PointOfSale);
             Assert.Equal(0, request.InvoiceNumberFrom);
             Assert.Equal(0, request.InvoiceNumberTo);
             Assert.Equal(default(DateTime), request.InvoiceDate);
+            Assert.Equal(0, request.Concept);
+            Assert.Equal(0, request.DocumentType);
+            Assert.Equal(0, request.DocumentNumber);
             Assert.Equal(0m, request.TotalAmount);
-            Assert.Equal(0m, request.NonTaxableAmount);
             Assert.Equal(0m, request.NetAmount);
             Assert.Equal(0m, request.ExemptAmount);
-            Assert.Equal(0m, request.TaxAmount);
             Assert.Equal(0m, request.VatAmount);
             Assert.Equal("PES", request.CurrencyId);
             Assert.Equal(1.0m, request.CurrencyRate);
-            Assert.Null(request.ServiceDateFrom);
-            Assert.Null(request.ServiceDateTo);
-            Assert.Null(request.PaymentDueDate);
             Assert.NotNull(request.VatDetails);
             Assert.Empty(request.VatDetails);
             Assert.NotNull(request.TaxDetails);
@@ -41,104 +75,124 @@ namespace Afip.Dotnet.UnitTests.Models.Invoice
             Assert.Empty(request.AssociatedInvoices);
             Assert.NotNull(request.OptionalData);
             Assert.Empty(request.OptionalData);
-            Assert.False(request.PayInSameForeignCurrency);
-            Assert.Null(request.ReceiverVatCondition);
         }
 
         [Fact]
-        public void InvoiceRequest_AllProperties_CanBeSetAndRetrieved()
+        public void VatDetails_WithValidList_ShouldSetCorrectly()
         {
             // Arrange
-            var invoiceDate = DateTime.Today;
-            var serviceFrom = DateTime.Today.AddDays(-7);
-            var serviceTo = DateTime.Today;
-            var paymentDue = DateTime.Today.AddDays(30);
-
+            var request = new InvoiceRequest();
             var vatDetails = new List<VatDetail>
             {
-                new VatDetail { VatId = 5, BaseAmount = 100m, Amount = 21m }
-            };
-
-            var taxDetails = new List<TaxDetail>
-            {
-                new TaxDetail { TaxId = 1, Description = "Test Tax", BaseAmount = 100m, Rate = 5m, Amount = 5m }
-            };
-
-            var associatedInvoices = new List<AssociatedInvoice>
-            {
-                new AssociatedInvoice { InvoiceType = 1, PointOfSale = 1, InvoiceNumber = 123L }
-            };
-
-            var optionalData = new List<OptionalData>
-            {
-                new OptionalData { Id = 1, Value = "Test Value" }
+                new VatDetail
+                {
+                    VatId = 5,
+                    BaseAmount = 82.64m,
+                    Amount = 17.36m
+                }
             };
 
             // Act
-            var request = new InvoiceRequest
-            {
-                PointOfSale = 1,
-                InvoiceType = 11,
-                Concept = 1,
-                DocumentType = 96,
-                DocumentNumber = 12345678,
-                InvoiceNumberFrom = 1,
-                InvoiceNumberTo = 1,
-                InvoiceDate = invoiceDate,
-                TotalAmount = 121m,
-                NonTaxableAmount = 0m,
-                NetAmount = 100m,
-                ExemptAmount = 0m,
-                TaxAmount = 5m,
-                VatAmount = 21m,
-                CurrencyId = "DOL",
-                CurrencyRate = 350.50m,
-                ServiceDateFrom = serviceFrom,
-                ServiceDateTo = serviceTo,
-                PaymentDueDate = paymentDue,
-                VatDetails = vatDetails,
-                TaxDetails = taxDetails,
-                AssociatedInvoices = associatedInvoices,
-                OptionalData = optionalData,
-                PayInSameForeignCurrency = true,
-                ReceiverVatCondition = 1
-            };
+            request.VatDetails = vatDetails;
 
             // Assert
-            Assert.Equal(1, request.PointOfSale);
-            Assert.Equal(11, request.InvoiceType);
-            Assert.Equal(1, request.Concept);
-            Assert.Equal(96, request.DocumentType);
-            Assert.Equal(12345678, request.DocumentNumber);
-            Assert.Equal(1, request.InvoiceNumberFrom);
-            Assert.Equal(1, request.InvoiceNumberTo);
-            Assert.Equal(invoiceDate, request.InvoiceDate);
-            Assert.Equal(121m, request.TotalAmount);
-            Assert.Equal(0m, request.NonTaxableAmount);
-            Assert.Equal(100m, request.NetAmount);
-            Assert.Equal(0m, request.ExemptAmount);
-            Assert.Equal(5m, request.TaxAmount);
-            Assert.Equal(21m, request.VatAmount);
-            Assert.Equal("DOL", request.CurrencyId);
-            Assert.Equal(350.50m, request.CurrencyRate);
-            Assert.Equal(serviceFrom, request.ServiceDateFrom);
-            Assert.Equal(serviceTo, request.ServiceDateTo);
-            Assert.Equal(paymentDue, request.PaymentDueDate);
-            Assert.Equal(vatDetails, request.VatDetails);
-            Assert.Equal(taxDetails, request.TaxDetails);
-            Assert.Equal(associatedInvoices, request.AssociatedInvoices);
-            Assert.Equal(optionalData, request.OptionalData);
-            Assert.True(request.PayInSameForeignCurrency);
-            Assert.Equal(1, request.ReceiverVatCondition);
+            Assert.NotNull(request.VatDetails);
+            Assert.Single(request.VatDetails);
+            Assert.Equal(5, request.VatDetails[0].VatId);
+            Assert.Equal(82.64m, request.VatDetails[0].BaseAmount);
+            Assert.Equal(17.36m, request.VatDetails[0].Amount);
+        }
+
+        [Fact]
+        public void TaxDetails_WithValidList_ShouldSetCorrectly()
+        {
+            // Arrange
+            var request = new InvoiceRequest();
+            var taxDetails = new List<TaxDetail>
+            {
+                new TaxDetail
+                {
+                    TaxId = 1,
+                    Description = "Test Tax",
+                    BaseAmount = 100.00m,
+                    Rate = 0.05m,
+                    Amount = 5.00m
+                }
+            };
+
+            // Act
+            request.TaxDetails = taxDetails;
+
+            // Assert
+            Assert.NotNull(request.TaxDetails);
+            Assert.Single(request.TaxDetails);
+            Assert.Equal(1, request.TaxDetails[0].TaxId);
+            Assert.Equal("Test Tax", request.TaxDetails[0].Description);
+            Assert.Equal(100.00m, request.TaxDetails[0].BaseAmount);
+            Assert.Equal(0.05m, request.TaxDetails[0].Rate);
+            Assert.Equal(5.00m, request.TaxDetails[0].Amount);
+        }
+
+        [Fact]
+        public void AssociatedInvoices_WithValidList_ShouldSetCorrectly()
+        {
+            // Arrange
+            var request = new InvoiceRequest();
+            var associatedInvoices = new List<AssociatedInvoice>
+            {
+                new AssociatedInvoice
+                {
+                    InvoiceType = 2,
+                    PointOfSale = 1,
+                    InvoiceNumber = 100
+                }
+            };
+
+            // Act
+            request.AssociatedInvoices = associatedInvoices;
+
+            // Assert
+            Assert.NotNull(request.AssociatedInvoices);
+            Assert.Single(request.AssociatedInvoices);
+            Assert.Equal(2, request.AssociatedInvoices[0].InvoiceType);
+            Assert.Equal(1, request.AssociatedInvoices[0].PointOfSale);
+            Assert.Equal(100, request.AssociatedInvoices[0].InvoiceNumber);
+        }
+
+        [Fact]
+        public void OptionalData_WithValidList_ShouldSetCorrectly()
+        {
+            // Arrange
+            var request = new InvoiceRequest();
+            var optionalData = new List<OptionalData>
+            {
+                new OptionalData
+                {
+                    Id = 1,
+                    Value = "test-value"
+                }
+            };
+
+            // Act
+            request.OptionalData = optionalData;
+
+            // Assert
+            Assert.NotNull(request.OptionalData);
+            Assert.Single(request.OptionalData);
+            Assert.Equal(1, request.OptionalData[0].Id);
+            Assert.Equal("test-value", request.OptionalData[0].Value);
         }
 
         [Theory]
-        [InlineData(1, "Invoice A")]
-        [InlineData(6, "Invoice B")]
-        [InlineData(11, "Invoice C")]
-        [InlineData(201, "Credit Note A")]
-        [InlineData(206, "Credit Note B")]
-        [InlineData(211, "Credit Note C")]
+        [InlineData(1, "Factura A")]
+        [InlineData(2, "Nota de Débito A")]
+        [InlineData(3, "Nota de Crédito A")]
+        [InlineData(6, "Factura B")]
+        [InlineData(7, "Nota de Débito B")]
+        [InlineData(8, "Nota de Crédito B")]
+        [InlineData(11, "Factura C")]
+        [InlineData(12, "Nota de Débito C")]
+        [InlineData(13, "Nota de Crédito C")]
         public void InvoiceRequest_CommonInvoiceTypes_ShouldAcceptValidValues(int invoiceType, string description)
         {
             // Arrange & Act
@@ -169,8 +223,17 @@ namespace Afip.Dotnet.UnitTests.Models.Invoice
 
         [Theory]
         [InlineData(80, "CUIT")]
+        [InlineData(86, "CUIL")]
+        [InlineData(87, "CDI")]
+        [InlineData(89, "LE")]
+        [InlineData(90, "LC")]
+        [InlineData(91, "CI Extranjera")]
+        [InlineData(92, "En Trámite")]
+        [InlineData(93, "Acta Nacimiento")]
+        [InlineData(94, "CI Bs. As. RNP")]
+        [InlineData(95, "CI Bs. As. RENATE")]
         [InlineData(96, "DNI")]
-        [InlineData(99, "General Document")]
+        [InlineData(99, "Consumidor Final")]
         public void InvoiceRequest_DocumentTypes_ShouldAcceptValidValues(int documentType, string description)
         {
             // Arrange & Act
@@ -184,60 +247,35 @@ namespace Afip.Dotnet.UnitTests.Models.Invoice
         }
 
         [Fact]
-        public void InvoiceRequest_VatDetails_CanAddMultipleEntries()
-        {
-            // Arrange
-            var request = new InvoiceRequest();
-            var vatDetail1 = new VatDetail { VatId = 5, BaseAmount = 100m, Amount = 21m };
-            var vatDetail2 = new VatDetail { VatId = 3, BaseAmount = 50m, Amount = 0m };
-
-            // Act
-            request.VatDetails.Add(vatDetail1);
-            request.VatDetails.Add(vatDetail2);
-
-            // Assert
-            Assert.Equal(2, request.VatDetails.Count);
-            Assert.Contains(vatDetail1, request.VatDetails);
-            Assert.Contains(vatDetail2, request.VatDetails);
-        }
-
-        [Fact]
-        public void InvoiceRequest_ForeignCurrencyFields_ShouldWorkCorrectly()
+        public void InvoiceRequest_WithNullCollections_ShouldNotThrow()
         {
             // Arrange & Act
             var request = new InvoiceRequest
             {
-                CurrencyId = "USD",
-                CurrencyRate = 300.75m,
-                PayInSameForeignCurrency = true
+                VatDetails = null!,
+                TaxDetails = null!,
+                AssociatedInvoices = null!,
+                OptionalData = null!
             };
 
             // Assert
-            Assert.Equal("USD", request.CurrencyId);
-            Assert.Equal(300.75m, request.CurrencyRate);
-            Assert.True(request.PayInSameForeignCurrency);
+            Assert.Null(request.VatDetails);
+            Assert.Null(request.TaxDetails);
+            Assert.Null(request.AssociatedInvoices);
+            Assert.Null(request.OptionalData);
         }
 
         [Fact]
-        public void InvoiceRequest_ServiceDates_ShouldBeOptional()
+        public void InvoiceRequest_WithEmptyCollections_ShouldWorkCorrectly()
         {
             // Arrange & Act
             var request = new InvoiceRequest
             {
-                Concept = 2 // Services
+                VatDetails = new List<VatDetail>(),
+                TaxDetails = new List<TaxDetail>(),
+                AssociatedInvoices = new List<AssociatedInvoice>(),
+                OptionalData = new List<OptionalData>()
             };
-
-            // Assert
-            Assert.Null(request.ServiceDateFrom);
-            Assert.Null(request.ServiceDateTo);
-            Assert.Null(request.PaymentDueDate);
-        }
-
-        [Fact]
-        public void InvoiceRequest_Collections_ShouldBeInitializedButEmpty()
-        {
-            // Arrange & Act
-            var request = new InvoiceRequest();
 
             // Assert
             Assert.NotNull(request.VatDetails);

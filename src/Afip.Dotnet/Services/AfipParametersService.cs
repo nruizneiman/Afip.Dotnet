@@ -220,8 +220,18 @@ namespace Afip.Dotnet.Services
             {
                 _logger?.LogDebug("Getting receiver VAT conditions for invoice class {InvoiceClass}", invoiceClass);
 
+                var ticket = await _wsaaService.GetValidTicketAsync("wsfe", cancellationToken);
+                var channel = CreateServiceChannel();
+
+                var authInfo = new FEAuthRequest
+                {
+                    Token = ticket.Token,
+                    Sign = ticket.Sign,
+                    Cuit = _configuration.Cuit
+                };
+
                 // This would require additional AFIP service calls specific to VAT conditions
-                // For now, returning common VAT conditions
+                // For now, returning common VAT conditions after validating the ticket
                 var vatConditions = new List<ParameterItem>
                 {
                     new ParameterItem { Id = "1", Description = "IVA Responsable Inscripto" },
